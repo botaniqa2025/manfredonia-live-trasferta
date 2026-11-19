@@ -16,6 +16,7 @@
   .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
   label{display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:3px}
   input[type="text"],input[type="number"],input[type="password"],select,textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff}
+  input[type="color"]{width:100%;height:38px;padding:3px;border:1px solid #cbd5e1;border-radius:8px;background:#fff;cursor:pointer}
   textarea{resize:vertical;min-height:60px}
   .score-ctrl{display:flex;align-items:center;justify-content:center;gap:12px;background:#f8fafc;padding:10px;border-radius:10px;margin-top:8px}
   .btn-circle{width:38px;height:38px;border-radius:50%;border:none;background:#005596;color:#fff;font-size:20px;font-weight:800;cursor:pointer}
@@ -274,9 +275,9 @@
     <div id="listaCommento" style="margin-top:10px;"></div>
   </div>
 
-  <!-- IMPOSTAZIONI PARTITA, STADIO, ALLENATORI, ARBITRI E LOGHI -->
+  <!-- IMPOSTAZIONI PARTITA, COLORI MAGLIE, STADIO, ALLENATORI, ARBITRI E LOGHI -->
   <div class="card" id="cardMatchInfo">
-    <h2>🏟️ Info Gara, Stadio, Allenatori & Arbitri</h2>
+    <h2>🏟️ Info Gara, Colori Maglie, Stadio & Arbitri</h2>
     <div class="grid2">
       <div><label>Competizione</label><input type="text" id="competizione" oninput="markDirty()"></div>
       <div><label>Data e Ora</label><input type="text" id="dataOra" oninput="markDirty()"></div>
@@ -284,6 +285,14 @@
     <div class="grid2" style="margin-top:8px;">
       <div><label>Squadra Casa</label><input type="text" id="nomeCasa" oninput="markDirty()"></div>
       <div><label>Squadra Ospite</label><input type="text" id="nomeOspite" oninput="markDirty()"></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Maglia Casa (Sfondo)</label><input type="color" id="magliaCasaBg" value="#dc2626" oninput="markDirty()"></div>
+      <div><label>Maglia Casa (Numero)</label><input type="color" id="magliaCasaNum" value="#ffffff" oninput="markDirty()"></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Maglia Ospite (Sfondo)</label><input type="color" id="magliaOspiteBg" value="#0066b2" oninput="markDirty()"></div>
+      <div><label>Maglia Ospite (Numero)</label><input type="color" id="magliaOspiteNum" value="#ffffff" oninput="markDirty()"></div>
     </div>
     <div class="grid2" style="margin-top:8px;">
       <div><label>Stadio</label><input type="text" id="stadio" placeholder="Stadio..." oninput="markDirty()"></div>
@@ -305,7 +314,7 @@
   <!-- FORMAZIONI -->
   <div class="card">
     <h2>👕 Formazioni (Numero - Cognome Nome)</h2>
-    <p style="font-size:11px;color:#64748b;margin-bottom:8px;">Un giocatore per riga: <b>23 - Nobile Tommaso</b>. Le icone ⚽ 🟨 🟥 🔄 si aggiungono da sole quando registri gli eventi!</p>
+    <p style="font-size:11px;color:#64748b;margin-bottom:8px;">Scrivi <b>(C)</b> per il capitano e <b>(P)</b> per il portiere (es. <b>1 - Brahja (P)</b>, <b>8 - Giacobbe (C)</b>). Le icone ⚽ 🟨 🟥 🔄 e il minuto del cambio appaiono in automatico!</p>
     <div class="grid2">
       <div><label>Titolari Casa</label><textarea id="fCasaTit" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:190px;font-size:12px;"></textarea></div>
       <div><label>Titolari Ospite</label><textarea id="fOspTit" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:190px;font-size:12px;"></textarea></div>
@@ -334,8 +343,8 @@ let matchData = {
   recupero: "",
   timerStart: null,
   timerBase: 1,
-  casa: { nome: "Squadra Casa", logo: "", gol: 0, allenatore: "" },
-  ospite: { nome: "Manfredonia", logo: "", gol: 0, allenatore: "" },
+  casa: { nome: "Squadra Casa", logo: "", gol: 0, allenatore: "", magliaBg: "#dc2626", magliaNum: "#ffffff" },
+  ospite: { nome: "Manfredonia", logo: "", gol: 0, allenatore: "", magliaBg: "#0066b2", magliaNum: "#ffffff" },
   infoGara: { arbitro: "", ass1: "", ass2: "" },
   riassunto: [],
   formazioni: { casaTitolari: [], ospiteTitolari: [], casaPanchina: [], ospitePanchina: [] },
@@ -386,9 +395,10 @@ function getOpposingKeeper(attTeam){
   const tit = defTeam === 'casa' ? (matchData.formazioni.casaTitolari || []) : (matchData.formazioni.ospiteTitolari || []);
   const defName = (defTeam === 'casa' ? matchData.casa.nome : matchData.ospite.nome) || '';
   const abbr = getTeamAbbr(defName);
-  const gk = tit.find(p => String(p.num).trim() === '1') || tit[0];
+  const gk = tit.find(p => /\(P\)/i.test(p.nome) || String(p.num).trim() === '1') || tit[0];
   if(gk && gk.nome){
-    return abbr ? `${gk.nome} (${abbr})` : gk.nome;
+    const cleanGk = gk.nome.replace(/\((C|P)\)/gi, '').trim();
+    return abbr ? `${cleanGk} (${abbr})` : cleanGk;
   }
   return abbr ? `il portiere (${abbr})` : 'il portiere';
 }
@@ -508,11 +518,20 @@ function textToPlayers(txt){
     const parts = line.split('-');
     const num = (parts[0]||'').trim();
     let rest = parts.slice(1).join('-').trim();
-    let badge = "";
-    ['⚽','🟨','🟥','🔄'].forEach(ic=>{
-      if(rest.includes(ic)){ badge=ic; rest=rest.replace(ic,'').trim(); }
+    let badgeTokens = [];
+
+    rest = rest.replace(/🔄\s*\d+(?:\+\d+)?'?/g, m => {
+      badgeTokens.push(m.trim());
+      return '';
     });
-    return { num, nome: rest, badge };
+    ['⚽','🟨','🟥','🔄'].forEach(ic=>{
+      while(rest.includes(ic)){
+        badgeTokens.push(ic);
+        rest = rest.replace(ic, '');
+      }
+    });
+
+    return { num, nome: rest.replace(/\s+/g, ' ').trim(), badge: badgeTokens.join(' ') };
   });
 }
 
@@ -525,6 +544,10 @@ function syncTextToPlayers(){
   refreshQuickPlayers();
 }
 
+function stripRoleTags(name){
+  return (name || '').replace(/\((C|P)\)/gi, '').replace(/\s+/g, ' ').trim();
+}
+
 function refreshQuickPlayers(){
   if(!matchData) return;
   const team = document.getElementById('qaSquadra').value;
@@ -533,7 +556,7 @@ function refreshQuickPlayers(){
   const all = [...tit, ...pan];
   const sel = document.getElementById('qaPlayer');
   sel.innerHTML = `<option value="">-- Non specificato (Squadra) --</option>` +
-    all.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+    all.map(p => `<option value="${stripRoleTags(p.nome)}">${p.num} - ${p.nome}</option>`).join('');
 }
 
 function onQuickTipoChange(){
@@ -687,12 +710,12 @@ function refreshPlayerDropdowns(){
     subWrap.style.display = "block";
 
     sel.innerHTML = `<option value="">-- Panchina (${pan.length}) --</option>` +
-      pan.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+      pan.map(p => `<option value="${stripRoleTags(p.nome)}">${p.num} - ${p.nome}</option>`).join('');
 
     const subbedIn = pan.filter(p => (p.badge || '').includes('🔄'));
     const onPitch = [...tit, ...subbedIn];
     subOutSel.innerHTML = `<option value="">-- Titolari in campo (${onPitch.length}) --</option>` +
-      onPitch.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+      onPitch.map(p => `<option value="${stripRoleTags(p.nome)}">${p.num} - ${p.nome}</option>`).join('');
   } else {
     lblSel.innerText = "Seleziona Giocatore";
     lblTesto.innerText = "Nome (o scrivi a mano)";
@@ -700,12 +723,12 @@ function refreshPlayerDropdowns(){
     subWrap.style.display = "none";
 
     sel.innerHTML = `<option value="">-- Scegli o scrivi sotto --</option>` +
-      all.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+      all.map(p => `<option value="${stripRoleTags(p.nome)}">${p.num} - ${p.nome}</option>`).join('');
   }
 
   const dl = document.getElementById('extraPlayersList');
-  dl.innerHTML = all.map(p => `<option value="(${p.nome})">`).join('') +
-    all.map(p => `<option value="(esce ${p.nome})">`).join('');
+  dl.innerHTML = all.map(p => `<option value="(${stripRoleTags(p.nome)})">`).join('') +
+    all.map(p => `<option value="(esce ${stripRoleTags(p.nome)})">`).join('');
 }
 
 function onSelectPlayer(){
@@ -720,13 +743,14 @@ function onSelectSubOut(){
 
 function addBadgeToPlayer(team, playerName, badgeIcon){
   if(!playerName) return;
-  const cleanName = playerName.replace(/^\(esce\s+/i, '').replace(/^\(/, '').replace(/\)$/, '').trim();
+  const cleanName = stripRoleTags(playerName.replace(/^\(esce\s+/i, '').replace(/^\(/, '').replace(/\)$/, ''));
   if(!cleanName) return;
   const keys = team === 'casa' ? ['casaTitolari','casaPanchina'] : ['ospiteTitolari','ospitePanchina'];
   keys.forEach(k => {
     (matchData.formazioni[k] || []).forEach(p => {
-      if(p.nome.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(p.nome.toLowerCase())){
-        if(!p.badge.includes(badgeIcon)) p.badge = (p.badge + badgeIcon).trim();
+      const pClean = stripRoleTags(p.nome);
+      if(pClean.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(pClean.toLowerCase())){
+        if(!p.badge.includes(badgeIcon)) p.badge = (p.badge + ' ' + badgeIcon).trim();
       }
     });
   });
@@ -768,6 +792,11 @@ async function init(){
     console.error("Errore caricamento Gist:", err);
   }
 
+  if(!matchData.casa.magliaBg) matchData.casa.magliaBg = "#dc2626";
+  if(!matchData.casa.magliaNum) matchData.casa.magliaNum = "#ffffff";
+  if(!matchData.ospite.magliaBg) matchData.ospite.magliaBg = "#0066b2";
+  if(!matchData.ospite.magliaNum) matchData.ospite.magliaNum = "#ffffff";
+
   sortCronacaAndEvents();
   renderForm();
   clearDirty();
@@ -783,6 +812,10 @@ function renderForm(){
   stEl.value = ['PRE-PARTITA','1° TEMPO','INTERVALLO','2° TEMPO','FINALE'].includes(matchData.stato) ? matchData.stato : '1° TEMPO';
   document.getElementById('nomeCasa').value = matchData.casa.nome || '';
   document.getElementById('nomeOspite').value = matchData.ospite.nome || '';
+  document.getElementById('magliaCasaBg').value = matchData.casa.magliaBg || '#dc2626';
+  document.getElementById('magliaCasaNum').value = matchData.casa.magliaNum || '#ffffff';
+  document.getElementById('magliaOspiteBg').value = matchData.ospite.magliaBg || '#0066b2';
+  document.getElementById('magliaOspiteNum').value = matchData.ospite.magliaNum || '#ffffff';
   document.getElementById('lblCasa').innerText = "Gol " + matchData.casa.nome;
   document.getElementById('lblOspite').innerText = "Gol " + matchData.ospite.nome;
   document.getElementById('golCasa').innerText = matchData.casa.gol || 0;
@@ -966,12 +999,13 @@ function addEvento(){
   const extra = document.getElementById('evExtra').value.trim();
   if(!testo) return alert("Seleziona o scrivi il giocatore!");
 
-  const badgeMap = { gol: '⚽', giallo: '🟨', rosso: '🟥', cambio: '🔄' };
-  if (badgeMap[tipo]) {
-    addBadgeToPlayer(squadra, testo, badgeMap[tipo]);
-    if (tipo === 'cambio' && extra) {
-      addBadgeToPlayer(squadra, extra, '🔄');
-    }
+  if (tipo === 'cambio') {
+    const subTag = `🔄${min}`;
+    addBadgeToPlayer(squadra, testo, subTag);
+    if (extra) addBadgeToPlayer(squadra, extra, subTag);
+  } else {
+    const badgeMap = { gol: '⚽', giallo: '🟨', rosso: '🟥' };
+    if (badgeMap[tipo]) addBadgeToPlayer(squadra, testo, badgeMap[tipo]);
   }
 
   if (editEvIndex > -1) {
@@ -1103,6 +1137,10 @@ async function saveToGitHub(){
   matchData.citta = document.getElementById('citta').value.trim();
   matchData.casa.nome = document.getElementById('nomeCasa').value.trim();
   matchData.ospite.nome = document.getElementById('nomeOspite').value.trim();
+  matchData.casa.magliaBg = document.getElementById('magliaCasaBg').value;
+  matchData.casa.magliaNum = document.getElementById('magliaCasaNum').value;
+  matchData.ospite.magliaBg = document.getElementById('magliaOspiteBg').value;
+  matchData.ospite.magliaNum = document.getElementById('magliaOspiteNum').value;
   matchData.casa.allenatore = document.getElementById('allCasa').value.trim();
   matchData.ospite.allenatore = document.getElementById('allOspite').value.trim();
   matchData.infoGara = {
