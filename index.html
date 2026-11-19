@@ -9,7 +9,6 @@
   body { background: #eef2f6; color: #1a1a1a; padding: 8px; }
   .card { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 51, 102, 0.12); border: 1px solid #dbeafe; }
   
-  /* Header con texture diagonale sottile e colori sociali */
   .header {
     background:
       repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 6px, transparent 6px, transparent 14px),
@@ -41,7 +40,6 @@
     text-shadow: 0 2px 6px rgba(0,0,0,0.25);
   }
   
-  /* Badge LIVE con pallino pulsante */
   .status {
     display: inline-flex; align-items: center; gap: 6px;
     margin-top: 6px; padding: 4px 11px; border-radius: 20px;
@@ -62,7 +60,6 @@
     50% { opacity: 0.35; transform: scale(0.75); }
   }
 
-  /* Barra avanzamento tempo */
   .time-progress-wrap {
     width: 82%; max-width: 120px; height: 4px;
     background: rgba(255,255,255,0.22); border-radius: 4px;
@@ -84,7 +81,6 @@
 
   .half-bar { background: #f1f5f9; padding: 6px 10px; font-size: 11px; font-weight: 800; color: #475569; border-radius: 6px; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
   
-  /* Righe Riassunto con evidenziazione celeste/blu sui Gol */
   .event-row { display: flex; align-items: center; padding: 9px 6px; border-bottom: 1px solid #f1f5f9; font-size: 13px; gap: 8px; border-radius: 6px; }
   .event-row.ospite { flex-direction: row-reverse; text-align: right; }
   .event-row.is-goal { background: #f0f9ff; border-bottom-color: #e0f2fe; border-left: 3px solid #0284c7; }
@@ -100,10 +96,22 @@
   .lineup-col { display: flex; flex-direction: column; }
   .player-row { display: flex; align-items: center; padding: 7px 4px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; gap: 7px; }
   .player-row.ospite { flex-direction: row-reverse; text-align: right; }
-  .p-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 4px; border-radius: 5px; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 11px; }
-  .player-row.ospite .p-num { background: #f1f5f9; color: #334155; }
+  .p-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 26px; height: 24px; padding: 0 5px;
+    border-radius: 6px; font-weight: 900; font-size: 11.5px;
+    border: 1px solid rgba(15,23,42,0.16);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+    flex-shrink: 0;
+  }
   .p-fullname { font-weight: 600; color: #1e293b; flex: 1; line-height: 1.25; }
-  .p-badge { font-size: 12px; }
+  .cap-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    background: #facc15; color: #0f172a; border: 1px solid #eab308;
+    font-size: 9.5px; font-weight: 900; padding: 1px 4px;
+    border-radius: 4px; margin: 0 3px; vertical-align: middle;
+  }
+  .p-badge { font-size: 11px; font-weight: 700; color: #475569; white-space: nowrap; }
   .coaches-box { display: flex; justify-content: space-between; padding: 8px 6px; background: #f8fafc; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-top: 6px; }
   .ref-box { background: #f8fafc; border-radius: 8px; padding: 8px 10px; margin-top: 6px; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 5px; }
   .ref-row { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
@@ -115,7 +123,6 @@
   .sub-btn { flex: 1; padding: 7px 10px; border: none; border-radius: 7px; font-size: 11.5px; font-weight: 800; color: #64748b; background: transparent; cursor: pointer; transition: 0.2s; }
   .sub-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
 
-  /* Commenti + Gol in Grassetto Rosso */
   .comm-item { padding: 12px 8px; border-bottom: 1px solid #e2e8f0; border-radius: 6px; }
   .comm-item:last-child { border-bottom: none; }
   .comm-item.is-goal { background: #fef2f2; border-bottom-color: #fecaca; border-left: 3px solid #dc2626; margin: 4px 0; }
@@ -129,7 +136,6 @@
   .comm-note:last-child { border-bottom: none; }
   .comm-note.saliente { font-weight: 700; color: #0f172a; }
 
-  /* Footer con lo stesso identico stile dell'Header */
   .club-footer {
     background:
       repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 6px, transparent 6px, transparent 14px),
@@ -269,14 +275,23 @@
     return `<span class="ev-pill">•</span>`;
   }
 
-  function renderPlayerList(list, isOspite) {
-    return (list || []).map(p => `
-      <div class="player-row ${isOspite ? 'ospite' : ''}">
-        <span class="p-num">${p.num}</span>
-        <span class="p-fullname">${p.nome}</span>
-        ${p.badge ? `<span class="p-badge">${p.badge}</span>` : ''}
-      </div>
-    `).join('');
+  function renderPlayerList(list, isOspite, kitBg, kitNum) {
+    return (list || []).map(p => {
+      const rawName = p.nome || '';
+      const isCap = /\(C\)/i.test(rawName);
+      const isGk = /\(P\)/i.test(rawName) || String(p.num).trim() === '1';
+      const cleanName = rawName.replace(/\((C|P)\)/gi, '').replace(/\s+/g, ' ').trim();
+      const bg = isGk ? kitNum : kitBg;
+      const fg = isGk ? kitBg : kitNum;
+
+      return `
+        <div class="player-row ${isOspite ? 'ospite' : ''}">
+          <span class="p-num" style="background:${bg};color:${fg};">${p.num}</span>
+          <span class="p-fullname">${cleanName}${isCap ? `<span class="cap-badge">C</span>` : ''}</span>
+          ${p.badge ? `<span class="p-badge">${p.badge}</span>` : ''}
+        </div>
+      `;
+    }).join('');
   }
 
   function renderCommento() {
@@ -428,6 +443,10 @@
 
       const info = data.infoGara || {};
       const hasInfo = info.arbitro || info.ass1 || info.ass2;
+      const casaBg = data.casa.magliaBg || '#dc2626';
+      const casaNum = data.casa.magliaNum || '#ffffff';
+      const ospBg = data.ospite.magliaBg || '#0066b2';
+      const ospNum = data.ospite.magliaNum || '#ffffff';
 
       document.getElementById('formazioni').innerHTML = `
         <div class="lineup-teams-head">
@@ -436,13 +455,13 @@
         </div>
         <div class="half-bar">Titolari</div>
         <div class="lineup-grid">
-          <div class="lineup-col">${renderPlayerList(data.formazioni.casaTitolari, false)}</div>
-          <div class="lineup-col">${renderPlayerList(data.formazioni.ospiteTitolari, true)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.casaTitolari, false, casaBg, casaNum)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.ospiteTitolari, true, ospBg, ospNum)}</div>
         </div>
         <div class="half-bar" style="margin-top:16px;">In Panchina</div>
         <div class="lineup-grid">
-          <div class="lineup-col">${renderPlayerList(data.formazioni.casaPanchina, false)}</div>
-          <div class="lineup-col">${renderPlayerList(data.formazioni.ospitePanchina, true)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.casaPanchina, false, casaBg, casaNum)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.ospitePanchina, true, ospBg, ospNum)}</div>
         </div>
         ${(data.casa.allenatore || data.ospite.allenatore) ? `
           <div class="half-bar" style="margin-top:16px;">Allenatori</div>
