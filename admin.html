@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Regia Live Trasferta - Manfredonia Calcio</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+  body{background:#eef2f6;color:#1e293b;padding:12px 12px 96px}
+  .wrap{max-width:600px;margin:0 auto}
+  .top{background:#003366;color:#fff;padding:14px;border-radius:12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+  .top h1{font-size:16px}
+  .card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05)}
+  .card h2{font-size:13px;text-transform:uppercase;color:#005596;margin-bottom:10px;border-bottom:1px solid #e2e8f0;padding-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+  label{display:block;font-size:11px;font-weight:700;color:#64748b;margin-bottom:3px}
+  input[type="text"],input[type="number"],input[type="password"],select,textarea{width:100%;padding:9px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;background:#fff}
+  textarea{resize:vertical;min-height:60px}
+  .score-ctrl{display:flex;align-items:center;justify-content:center;gap:12px;background:#f8fafc;padding:10px;border-radius:10px;margin-top:8px}
+  .btn-circle{width:38px;height:38px;border-radius:50%;border:none;background:#005596;color:#fff;font-size:20px;font-weight:800;cursor:pointer}
+  .btn-circle.minus{background:#94a3b8}
+  .big-num{font-size:28px;font-weight:800;min-width:30px;text-align:center}
+  .btn{padding:10px 14px;border:none;border-radius:8px;font-weight:700;font-size:13px;cursor:pointer;background:#005596;color:#fff;width:100%;margin-top:8px}
+  .btn.green{background:#16a34a}
+  .btn.orange{background:#d97706}
+  .btn.red{background:#dc2626;width:auto;padding:5px 8px;font-size:11px;margin:0}
+  .btn.edit{background:#f59e0b;color:#fff;width:auto;padding:5px 8px;font-size:11px;margin:0}
+  .btn.gray{background:#64748b}
+  .btn.share{background:#0284c7;margin-top:0;margin-bottom:12px}
+  .btn-group{display:flex;gap:6px;margin-top:8px}
+  .btn-group .btn{margin-top:0}
+  .row-actions{display:flex;gap:5px;flex-shrink:0}
+  .item-row{display:flex;justify-content:space-between;align-items:center;padding:8px;background:#f8fafc;border-radius:8px;margin-top:6px;font-size:13px;gap:8px}
+  .item-row.editing{background:#fef3c7;border:1px solid #f59e0b}
+  .rec-bar{display:flex;gap:5px;margin-top:8px;align-items:center;flex-wrap:wrap}
+  .rec-btn{padding:5px 9px;border:1px solid #cbd5e1;border-radius:6px;background:#f8fafc;font-size:12px;font-weight:700;cursor:pointer}
+  .rec-btn.active{background:#005596;color:#fff;border-color:#005596}
+  .chk-box{display:flex;align-items:center;gap:8px;background:#f8fafc;padding:9px 10px;border-radius:8px;border:1px solid #cbd5e1;margin-top:8px;cursor:pointer;font-size:12.5px;font-weight:700;color:#0f172a}
+  .chk-box input{width:18px;height:18px;accent-color:#005596;cursor:pointer}
+
+  /* Card Azioni Rapide */
+  .quick-card{border:2px solid #bae6fd;background:linear-gradient(180deg,#f0f9ff 0%,#ffffff 38%)}
+  
+  /* Barra salvataggio con avviso visivo modifiche non pubblicate */
+  .save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px;box-shadow:0 -4px 16px rgba(0,0,0,.14);z-index:99;display:flex;gap:8px;justify-content:center;transition:background 0.25s}
+  .save-bar.dirty{background:#fffbeb;border-top:2px solid #f59e0b}
+  .save-bar button{max-width:460px;margin:0;font-size:14.5px;padding:14px;background:#16a34a;transition:0.25s}
+  .save-bar.dirty button{background:#ea580c;box-shadow:0 4px 14px rgba(234,88,12,0.45);animation:pulseSave 1.4s infinite ease-in-out}
+  @keyframes pulseSave{
+    0%,100%{transform:scale(1)}
+    50%{transform:scale(1.018)}
+  }
+
+  .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:700;display:none;z-index:999}
+  .live-pill{background:#e60026;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast">Salvato!</div>
+
+<div class="wrap">
+  <div class="top">
+    <h1>⚽ Regia Live Trasferta</h1>
+    <a href="./" target="_blank" style="color:#fff;font-size:12px;font-weight:700;">Vedi Sito ↗</a>
+  </div>
+
+  <button class="btn share" onclick="copySocialPost()">📲 Copia Aggiornamento per WhatsApp / Social</button>
+
+  <!-- TOKEN -->
+  <div class="card" id="tokenCard">
+    <h2>🔑 Collegamento GitHub (solo 1ª volta)</h2>
+    <label>Incolla qui il tuo Token GitHub (ghp_...)</label>
+    <div style="display:flex;gap:6px;">
+      <input type="password" id="ghToken" placeholder="ghp_xxxxxxxxxxxx">
+      <button class="btn" style="width:auto;margin:0;" onclick="saveToken()">Salva</button>
+    </div>
+  </div>
+
+  <!-- RISULTATO E CRONOMETRO AUTOMATICO -->
+  <div class="card">
+    <h2>⏱️ Risultato & Cronometro Auto <span class="live-pill" id="livePreview">PRE-PARTITA</span></h2>
+    <div class="grid2">
+      <div>
+        <label>Fase Partita</label>
+        <select id="stato" onchange="onPhaseChange()">
+          <option value="PRE-PARTITA">PRE-PARTITA</option>
+          <option value="1° TEMPO">1° TEMPO (Auto 00:00-45:00)</option>
+          <option value="INTERVALLO">INTERVALLO</option>
+          <option value="2° TEMPO">2° TEMPO (Auto 45:00-90:00)</option>
+          <option value="FINALE">FINALE</option>
+        </select>
+      </div>
+      <div>
+        <label>Correggi minuto ora (opzionale)</label>
+        <input type="number" id="minOverride" placeholder="Es. 12" oninput="markDirty()">
+      </div>
+    </div>
+
+    <div class="rec-bar">
+      <span style="font-size:11px;font-weight:700;color:#64748b;">Recupero:</span>
+      <button class="rec-btn" onclick="setRec('')">Nessuno</button>
+      <button class="rec-btn" onclick="setRec('1')">+1'</button>
+      <button class="rec-btn" onclick="setRec('2')">+2'</button>
+      <button class="rec-btn" onclick="setRec('3')">+3'</button>
+      <button class="rec-btn" onclick="setRec('4')">+4'</button>
+      <button class="rec-btn" onclick="setRec('5')">+5'</button>
+      <button class="rec-btn" onclick="setRec('6')">+6'</button>
+    </div>
+
+    <div class="grid2" style="margin-top:10px;">
+      <div>
+        <label id="lblCasa">Gol Casa</label>
+        <div class="score-ctrl">
+          <button class="btn-circle minus" onclick="chgGol('casa',-1)">-</button>
+          <span class="big-num" id="golCasa">0</span>
+          <button class="btn-circle" onclick="chgGol('casa',1)">+</button>
+        </div>
+      </div>
+      <div>
+        <label id="lblOspite">Gol Ospite</label>
+        <div class="score-ctrl">
+          <button class="btn-circle minus" onclick="chgGol('ospite',-1)">-</button>
+          <span class="big-num" id="golOspite">0</span>
+          <button class="btn-circle" onclick="chgGol('ospite',1)">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GENERATORE RAPIDO TIRI & ANGOLI (SOLO CRONACA) -->
+  <div class="card quick-card">
+    <h2>⚡ Azioni Rapide (Auto-Cronaca)</h2>
+    <div class="grid3">
+      <div>
+        <label>Squadra</label>
+        <select id="qaSquadra" onchange="refreshQuickPlayers()">
+          <option value="casa">Casa</option>
+          <option value="ospite">Ospite</option>
+        </select>
+      </div>
+      <div>
+        <label>Azione</label>
+        <select id="qaTipo" onchange="onQuickTipoChange()">
+          <option value="tiro_fuori">💨 Tiro Fuori</option>
+          <option value="tiro_porta">🎯 Tiro in Porta</option>
+          <option value="angolo">🚩 Calcio d'Angolo</option>
+        </select>
+      </div>
+      <div>
+        <label>Minuto (auto)</label>
+        <input type="text" id="qaMin" placeholder="Auto">
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <label>Giocatore (facoltativo)</label>
+        <select id="qaPlayer"></select>
+      </div>
+      <div id="qaEsitoWrap">
+        <label>Esito dell'azione</label>
+        <select id="qaEsito"></select>
+      </div>
+    </div>
+    <label class="chk-box">
+      <input type="checkbox" id="qaSaliente">
+      <span>⭐ Fase Saliente (Grassetto + va anche in Fasi Salienti)</span>
+    </label>
+    <button class="btn" onclick="addQuickAction()">⚡ Genera Frase in Cronaca</button>
+  </div>
+
+  <!-- EVENTI RIASSUNTO + AUTO-COMMENTO -->
+  <div class="card" id="cardEventi">
+    <h2>📋 Gol, Cartellini e Cambi (Auto-Formazioni & Cronaca)</h2>
+    <div class="grid3">
+      <div>
+        <label>Tempo</label>
+        <select id="evTempo">
+          <option value="1">1° Tempo</option>
+          <option value="2">2° Tempo</option>
+        </select>
+      </div>
+      <div>
+        <label>Minuto (auto)</label>
+        <input type="text" id="evMin" placeholder="Auto">
+      </div>
+      <div>
+        <label>Squadra</label>
+        <select id="evSquadra" onchange="refreshPlayerDropdowns()">
+          <option value="casa">Casa</option>
+          <option value="ospite">Ospite</option>
+        </select>
+      </div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <label>Tipo Evento</label>
+        <select id="evTipo" onchange="refreshPlayerDropdowns()">
+          <option value="gol">⚽ Gol (+1 Auto)</option>
+          <option value="autogol">🔴 Autogol (+1 Auto)</option>
+          <option value="giallo">🟨 Ammonizione</option>
+          <option value="rosso">🟥 Espulsione</option>
+          <option value="cambio">🔄 Sostituzione (Filtrata)</option>
+        </select>
+      </div>
+      <div>
+        <label id="lblPlayerSelect">Seleziona Giocatore</label>
+        <select id="evPlayerSelect" onchange="onSelectPlayer()"></select>
+      </div>
+    </div>
+
+    <!-- Menu secondario filtrato sui Titolari (compare solo per le Sostituzioni) -->
+    <div id="subOutWrap" style="display:none;margin-top:8px;">
+      <label>Chi ESCE (Titolari / In campo)</label>
+      <select id="evSubOutSelect" onchange="onSelectSubOut()"></select>
+    </div>
+
+    <div class="grid2" style="margin-top:8px;">
+      <div>
+        <label id="lblEvTesto">Nome (o scrivi a mano)</label>
+        <input type="text" id="evTesto" placeholder="Spinelli M.">
+      </div>
+      <div>
+        <label id="lblEvExtra">Assist / Esce (o scegli)</label>
+        <input type="text" id="evExtra" list="extraPlayersList" placeholder="(Sainz-Maza)">
+        <datalist id="extraPlayersList"></datalist>
+      </div>
+    </div>
+    <div id="evScoreWrap" style="display:none;margin-top:8px;">
+      <label>Punteggio parziale nella pillola (es. 1 - 0)</label>
+      <input type="text" id="evScoreEdit" placeholder="Es. 1 - 0">
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="btnAddEv" onclick="addEvento()">+ Aggiungi Evento</button>
+      <button class="btn gray" id="btnCancelEv" style="display:none;width:auto;" onclick="cancelEditEv()">Annulla</button>
+    </div>
+    <div id="listaEventi" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- COMMENTO DIRETTA TESTUALE & FASI SALIENTI -->
+  <div class="card" id="cardCommento">
+    <h2>🎙️ Commento Libero / Modifica Cronaca</h2>
+    <div class="grid3">
+      <div>
+        <label>Minuto (auto)</label>
+        <input type="text" id="commMin" placeholder="Auto">
+      </div>
+      <div>
+        <label>Tipo / Icona</label>
+        <select id="commIcona" onchange="onCommIconChange()">
+          <option value="SOLO_MIN">💬 Solo Minuto (azione senza icona)</option>
+          <option value="🥅">🥅 GOOOOL! (Grassetto Rosso)</option>
+          <option value="🔴">🔴 Autogol (Grassetto Rosso)</option>
+          <option value="🟨">🟨 Ammonizione</option>
+          <option value="🟥">🟥 Espulsione</option>
+          <option value="🔄">🔄 Sostituzione</option>
+          <option value="🚩">🚩 Calcio d'angolo</option>
+          <option value="⏱️">⏱️ Fischio / Recupero</option>
+          <option value="NOTA">📝 Nota libera (senza minuto/icona)</option>
+        </select>
+      </div>
+      <div>
+        <label>Punteggio (opzionale)</label>
+        <input type="text" id="commScore" placeholder="Es. 1 - 0">
+      </div>
+    </div>
+    <label class="chk-box">
+      <input type="checkbox" id="commSaliente">
+      <span>⭐ Fase Saliente (Grassetto + va anche in Fasi Salienti)</span>
+    </label>
+    <div style="margin-top:8px;">
+      <label>Testo della cronaca o della nota</label>
+      <textarea id="commTesto" placeholder="Scrivi cosa è successo..."></textarea>
+    </div>
+    <div class="btn-group">
+      <button class="btn" id="btnAddComm" onclick="addCommento()">+ Aggiungi al Commento</button>
+      <button class="btn gray" id="btnCancelComm" style="display:none;width:auto;" onclick="cancelEditComm()">Annulla</button>
+    </div>
+    <div id="listaCommento" style="margin-top:10px;"></div>
+  </div>
+
+  <!-- IMPOSTAZIONI PARTITA, STADIO, ALLENATORI, ARBITRI E LOGHI -->
+  <div class="card" id="cardMatchInfo">
+    <h2>🏟️ Info Gara, Stadio, Allenatori & Arbitri</h2>
+    <div class="grid2">
+      <div><label>Competizione</label><input type="text" id="competizione" oninput="markDirty()"></div>
+      <div><label>Data e Ora</label><input type="text" id="dataOra" oninput="markDirty()"></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Squadra Casa</label><input type="text" id="nomeCasa" oninput="markDirty()"></div>
+      <div><label>Squadra Ospite</label><input type="text" id="nomeOspite" oninput="markDirty()"></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Stadio</label><input type="text" id="stadio" placeholder="Stadio..." oninput="markDirty()"></div>
+      <div><label>Città</label><input type="text" id="citta" placeholder="Città..." oninput="markDirty()"></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Allenatore Casa</label><input type="text" id="allCasa" placeholder="Mister..." oninput="markDirty()"></div>
+      <div><label>Allenatore Ospite</label><input type="text" id="allOspite" placeholder="Mister..." oninput="markDirty()"></div>
+    </div>
+    <div class="grid3" style="margin-top:8px;">
+      <div><label>Arbitro</label><input type="text" id="arbitro" placeholder="Sig..." oninput="markDirty()"></div>
+      <div><label>Assistente 1</label><input type="text" id="ass1" placeholder="Sig..." oninput="markDirty()"></div>
+      <div><label>Assistente 2</label><input type="text" id="ass2" placeholder="Sig..." oninput="markDirty()"></div>
+    </div>
+    <div style="margin-top:8px;"><label>Link Logo Casa (.png/.jpg/.webp)</label><input type="text" id="logoCasa" oninput="markDirty()"></div>
+    <div style="margin-top:8px;"><label>Link Logo Ospite (.png/.jpg/.webp)</label><input type="text" id="logoOspite" oninput="markDirty()"></div>
+  </div>
+
+  <!-- FORMAZIONI -->
+  <div class="card">
+    <h2>👕 Formazioni (Numero - Cognome Nome)</h2>
+    <p style="font-size:11px;color:#64748b;margin-bottom:8px;">Un giocatore per riga: <b>23 - Nobile Tommaso</b>. Le icone ⚽ 🟨 🟥 🔄 si aggiungono da sole quando registri gli eventi!</p>
+    <div class="grid2">
+      <div><label>Titolari Casa</label><textarea id="fCasaTit" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:190px;font-size:12px;"></textarea></div>
+      <div><label>Titolari Ospite</label><textarea id="fOspTit" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:190px;font-size:12px;"></textarea></div>
+    </div>
+    <div class="grid2" style="margin-top:8px;">
+      <div><label>Panchina Casa</label><textarea id="fCasaPan" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:140px;font-size:12px;"></textarea></div>
+      <div><label>Panchina Ospite</label><textarea id="fOspPan" onchange="syncTextToPlayers()" oninput="markDirty()" style="min-height:140px;font-size:12px;"></textarea></div>
+    </div>
+    <button class="btn gray" style="margin-top:12px;" onclick="resetMatch()">🧹 Azzera Eventi e Cronaca (Nuova Partita)</button>
+  </div>
+</div>
+
+<div class="save-bar" id="saveBar">
+  <button class="btn green" id="btnSaveAll" onclick="saveToGitHub()">💾 PUBBLICA AGGIORNAMENTO LIVE</button>
+</div>
+
+<script>
+const GIST_ID = "dd15d972262ecba5e4473c14aafd3e46";
+const RAW_URL = `https://gist.githubusercontent.com/botaniqa2025/${GIST_ID}/raw/match.json`;
+let matchData = null;
+let phaseChanged = false;
+let editEvIndex = -1;
+let editCommIndex = -1;
+let hasUnsavedChanges = false;
+
+function pad2(n){
+  return String(n).padStart(2, '0');
+}
+
+function parseMinuteSortValue(minStr){
+  if(!minStr) return -1;
+  const clean = String(minStr).replace(/'/g, '').trim();
+  if(clean.includes('+')){
+    const parts = clean.split('+');
+    return (parseInt(parts[0], 10) || 0) + ((parseInt(parts[1], 10) || 0) * 0.01);
+  }
+  const val = parseInt(clean, 10);
+  return isNaN(val) ? -1 : val;
+}
+
+function sortCronacaAndEvents(){
+  if(!matchData) return;
+  matchData.commento.sort((a, b) => {
+    const va = (a.isNota && !a.min) ? -1 : parseMinuteSortValue(a.min);
+    const vb = (b.isNota && !b.min) ? -1 : parseMinuteSortValue(b.min);
+    if(va === vb) return 0;
+    return vb - va;
+  });
+  matchData.riassunto.sort((a, b) => {
+    if((a.tempo || 1) !== (b.tempo || 1)) return (a.tempo || 1) - (b.tempo || 1);
+    return parseMinuteSortValue(a.min) - parseMinuteSortValue(b.min);
+  });
+}
+
+function getTeamAbbr(teamName){
+  const clean = (teamName || '').replace(/[^a-zA-ZÀ-ÿ]/g, '');
+  if(!clean) return '';
+  return clean.charAt(0).toUpperCase() + clean.slice(1, 3).toLowerCase();
+}
+
+function getOpposingKeeper(attTeam){
+  const defTeam = attTeam === 'casa' ? 'ospite' : 'casa';
+  const tit = defTeam === 'casa' ? (matchData.formazioni.casaTitolari || []) : (matchData.formazioni.ospiteTitolari || []);
+  const defName = (defTeam === 'casa' ? matchData.casa.nome : matchData.ospite.nome) || '';
+  const abbr = getTeamAbbr(defName);
+  const gk = tit.find(p => String(p.num).trim() === '1') || tit[0];
+  if(gk && gk.nome){
+    return abbr ? `${gk.nome} (${abbr})` : gk.nome;
+  }
+  return abbr ? `il portiere (${abbr})` : 'il portiere';
+}
+
+function pickRandom(arr){
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function markDirty(){
+  hasUnsavedChanges = true;
+  const bar = document.getElementById('saveBar');
+  const btn = document.getElementById('btnSaveAll');
+  bar.classList.add('dirty');
+  if(!btn.disabled) btn.innerText = "⚠️ MODIFICHE NON SALVATE - PUBBLICA ORA";
+}
+
+function clearDirty(){
+  hasUnsavedChanges = false;
+  const bar = document.getElementById('saveBar');
+  const btn = document.getElementById('btnSaveAll');
+  bar.classList.remove('dirty');
+  btn.innerText = "💾 PUBBLICA AGGIORNAMENTO LIVE";
+}
+
+window.addEventListener('beforeunload', function(e){
+  if(hasUnsavedChanges){
+    e.preventDefault();
+    e.returnValue = '';
+  }
+});
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.innerText=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',2500);
+}
+
+function saveToken(){
+  const val=document.getElementById('ghToken').value.trim();
+  if(!val) return alert("Incolla prima il token ghp_...");
+  localStorage.setItem('mf_gh_token', val);
+  document.getElementById('tokenCard').style.border="2px solid #16a34a";
+  showToast("Token salvato sul telefono!");
+}
+
+function getCurrentAutoMin(){
+  if(!matchData || !matchData.timerStart) return "";
+  const elapsed = Math.floor((Date.now() - matchData.timerStart) / 60000);
+  const base = matchData.timerBase || 1;
+  const tot = Math.max(base, base + elapsed);
+  if(matchData.stato === '1° TEMPO' && tot > 45) return `45+${tot-45}'`;
+  if(matchData.stato === '2° TEMPO' && tot > 90) return `90+${tot-90}'`;
+  return `${tot}'`;
+}
+
+function getCurrentAutoClock(){
+  if(!matchData || !matchData.timerStart) return "";
+  const base = matchData.timerBase || 1;
+  const baseSeconds = Math.max(0, (base - 1) * 60);
+  const elapsedSeconds = Math.max(0, Math.floor((Date.now() - matchData.timerStart) / 1000));
+  const totalSeconds = baseSeconds + elapsedSeconds;
+  const mins = Math.floor(totalSeconds / 60);
+  const secs = totalSeconds % 60;
+
+  if(matchData.stato === '1° TEMPO' && mins >= 45){
+    const extraSec = totalSeconds - (45 * 60);
+    return `45:00 +${pad2(Math.floor(extraSec / 60))}:${pad2(extraSec % 60)}`;
+  }
+  if(matchData.stato === '2° TEMPO' && mins >= 90){
+    const extraSec = totalSeconds - (90 * 60);
+    return `90:00 +${pad2(Math.floor(extraSec / 60))}:${pad2(extraSec % 60)}`;
+  }
+  return `${pad2(mins)}:${pad2(secs)}`;
+}
+
+function updatePreviewBadge(){
+  if(!matchData) return;
+  const p = document.getElementById('livePreview');
+  const c = getCurrentAutoClock();
+  p.innerText = c ? `${matchData.stato} (${c})` : matchData.stato;
+}
+
+function onPhaseChange(){
+  phaseChanged = true;
+  markDirty();
+  const st = document.getElementById('stato').value;
+  if(st === '2° TEMPO') document.getElementById('evTempo').value = '2';
+  if(st === '1° TEMPO') document.getElementById('evTempo').value = '1';
+}
+
+function onCommIconChange(){
+  const val = document.getElementById('commIcona').value;
+  const isGoal = (val === '🥅' || val === '🔴');
+  if(isGoal){
+    document.getElementById('commSaliente').checked = true;
+    if(matchData && editCommIndex === -1) document.getElementById('commScore').value = `${matchData.casa.gol} - ${matchData.ospite.gol}`;
+  } else if (editCommIndex === -1) {
+    document.getElementById('commScore').value = '';
+  }
+}
+
+function setRec(val){
+  matchData.recupero = val;
+  document.querySelectorAll('.rec-btn').forEach(b=>{
+    b.classList.toggle('active', (val==='' && b.innerText==='Nessuno') || b.innerText===`+${val}'`);
+  });
+  markDirty();
+  showToast(val ? `Recupero +${val}' impostato` : "Recupero rimosso");
+}
+
+function playersToText(arr){
+  return (arr||[]).map(p=>`${p.num} - ${p.nome}${p.badge?' '+p.badge:''}`).join('\n');
+}
+
+function textToPlayers(txt){
+  return txt.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const parts = line.split('-');
+    const num = (parts[0]||'').trim();
+    let rest = parts.slice(1).join('-').trim();
+    let badge = "";
+    ['⚽','🟨','🟥','🔄'].forEach(ic=>{
+      if(rest.includes(ic)){ badge=ic; rest=rest.replace(ic,'').trim(); }
+    });
+    return { num, nome: rest, badge };
+  });
+}
+
+function syncTextToPlayers(){
+  matchData.formazioni.casaTitolari = textToPlayers(document.getElementById('fCasaTit').value);
+  matchData.formazioni.ospiteTitolari = textToPlayers(document.getElementById('fOspTit').value);
+  matchData.formazioni.casaPanchina = textToPlayers(document.getElementById('fCasaPan').value);
+  matchData.formazioni.ospitePanchina = textToPlayers(document.getElementById('fOspPan').value);
+  refreshPlayerDropdowns();
+  refreshQuickPlayers();
+}
+
+/* --- LOGICA AZIONI RAPIDE (TIRI SENZA ICONA & ANGOLI CON BANDIERINA) --- */
+function refreshQuickPlayers(){
+  if(!matchData) return;
+  const team = document.getElementById('qaSquadra').value;
+  const tit = team === 'casa' ? (matchData.formazioni.casaTitolari || []) : (matchData.formazioni.ospiteTitolari || []);
+  const pan = team === 'casa' ? (matchData.formazioni.casaPanchina || []) : (matchData.formazioni.ospitePanchina || []);
+  const all = [...tit, ...pan];
+  const sel = document.getElementById('qaPlayer');
+  sel.innerHTML = `<option value="">-- Non specificato (Squadra) --</option>` +
+    all.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+}
+
+function onQuickTipoChange(){
+  const tipo = document.getElementById('qaTipo').value;
+  const esitoSel = document.getElementById('qaEsito');
+  const wrap = document.getElementById('qaEsitoWrap');
+
+  if(tipo === 'tiro_fuori'){
+    wrap.style.visibility = 'visible';
+    esitoSel.innerHTML = `
+      <option value="fuori">Palla fuori</option>
+      <option value="angolo_difesa">Deviato in angolo dalla difesa</option>
+    `;
+  } else if(tipo === 'tiro_porta'){
+    wrap.style.visibility = 'visible';
+    esitoSel.innerHTML = `
+      <option value="bloccata">Bloccata senza problemi dal portiere</option>
+      <option value="parata">Parata dal portiere</option>
+      <option value="respinta">Respinta dal portiere</option>
+      <option value="angolo_portiere">Messo in corner dal portiere</option>
+      <option value="angolo_difesa">Deviato in corner dalla difesa</option>
+      <option value="palo">Colpisce il PALO!</option>
+      <option value="traversa">Colpisce la TRAVERSA!</option>
+    `;
+  } else {
+    wrap.style.visibility = 'hidden';
+  }
+}
+
+function addQuickAction(){
+  if(!matchData) return;
+  const squadra = document.getElementById('qaSquadra').value;
+  const tipo = document.getElementById('qaTipo').value;
+  const player = document.getElementById('qaPlayer').value.trim();
+  const esito = document.getElementById('qaEsito').value;
+  const saliente = document.getElementById('qaSaliente').checked;
+  const min = document.getElementById('qaMin').value.trim() || getCurrentAutoMin() || "1'";
+
+  const teamName = (squadra === 'casa' ? matchData.casa.nome : matchData.ospite.nome) || (squadra === 'casa' ? 'Casa' : 'Ospite');
+  const abbr = getTeamAbbr(teamName);
+  const playerTag = player ? (abbr ? `${player} (${abbr})` : player) : '';
+  const keeperTag = getOpposingKeeper(squadra);
+
+  let frase = '';
+  let icona = '';
+
+  if(tipo === 'tiro_fuori'){
+    if(esito === 'angolo_difesa'){
+      frase = playerTag
+        ? pickRandom([
+            `Tiro di ${playerTag}, palla che viene deviata dalla difesa in calcio d'angolo.`,
+            `Ci prova ${playerTag}, tiro che viene messo in corner dalla difesa.`,
+            `Conclusione di ${playerTag} murata e deviata in angolo dalla retroguardia.`
+          ])
+        : pickRandom([
+            `Tiro del ${teamName}, palla che viene deviata dalla difesa in calcio d'angolo.`,
+            `Ci prova il ${teamName}, tiro che viene messo in corner dalla difesa.`,
+            `Conclusione del ${teamName} murata e deviata in calcio d'angolo.`
+          ]);
+    } else {
+      frase = playerTag
+        ? pickRandom([
+            `Conclusione di ${playerTag}, palla fuori.`,
+            `Tiro fuori di ${playerTag}.`,
+            `Ci prova ${playerTag}, ma la conclusione termina sul fondo.`
+          ])
+        : pickRandom([
+            `Conclusione del ${teamName}, palla fuori.`,
+            `Tiro fuori del ${teamName}.`,
+            `Ci prova il ${teamName}, conclusione che termina a lato.`
+          ]);
+    }
+  } else if(tipo === 'tiro_porta'){
+    const startPart = playerTag
+      ? pickRandom([
+          `Tiro in porta di ${playerTag}`,
+          `Ci prova ${playerTag} con un tiro in porta`,
+          `Conclusione a rete di ${playerTag}`
+        ])
+      : pickRandom([
+          `Tiro in porta del ${teamName}`,
+          `Ci prova il ${teamName} con un tiro in porta`,
+          `Conclusione a rete del ${teamName}`
+        ]);
+
+    if(esito === 'bloccata'){
+      frase = `${startPart}, bloccata senza problemi da ${keeperTag}.`;
+    } else if(esito === 'parata'){
+      frase = `${startPart}, parata da ${keeperTag}.`;
+    } else if(esito === 'respinta'){
+      frase = `${startPart}, respinta da ${keeperTag}.`;
+    } else if(esito === 'angolo_portiere'){
+      frase = `${startPart}, ${keeperTag} mette in corner, calcio d'angolo.`;
+    } else if(esito === 'angolo_difesa'){
+      frase = `${startPart}, palla deviata dalla difesa in calcio d'angolo.`;
+    } else if(esito === 'palo'){
+      frase = `${startPart}, ma la palla colpisce in pieno il palo!`;
+    } else if(esito === 'traversa'){
+      frase = `${startPart}, ma la conclusione scheggia la traversa!`;
+    }
+  } else if(tipo === 'angolo'){
+    icona = '🚩';
+    frase = playerTag
+      ? pickRandom([
+          `Calcio d'angolo per il ${teamName}, dalla bandierina va ${playerTag}.`,
+          `Corner in favore del ${teamName}, batte ${playerTag}.`
+        ])
+      : pickRandom([
+          `Calcio d'angolo in favore del ${teamName}.`,
+          `Corner per il ${teamName}.`
+        ]);
+  }
+
+  matchData.commento.unshift({
+    isNota: false,
+    min,
+    icona,
+    testo: frase,
+    saliente,
+    isGol: false,
+    score: ''
+  });
+
+  sortCronacaAndEvents();
+  document.getElementById('qaMin').value = '';
+  document.getElementById('qaPlayer').value = '';
+  document.getElementById('qaSaliente').checked = false;
+  renderLists();
+  markDirty();
+  showToast("Azione inserita in cronaca!");
+}
+
+function refreshPlayerDropdowns(){
+  if(!matchData) return;
+  const team = document.getElementById('evSquadra').value;
+  const tipo = document.getElementById('evTipo').value;
+  const tit = team === 'casa' ? (matchData.formazioni.casaTitolari || []) : (matchData.formazioni.ospiteTitolari || []);
+  const pan = team === 'casa' ? (matchData.formazioni.casaPanchina || []) : (matchData.formazioni.ospitePanchina || []);
+  const all = [...tit, ...pan];
+
+  const sel = document.getElementById('evPlayerSelect');
+  const lblSel = document.getElementById('lblPlayerSelect');
+  const subWrap = document.getElementById('subOutWrap');
+  const subOutSel = document.getElementById('evSubOutSelect');
+  const lblTesto = document.getElementById('lblEvTesto');
+  const lblExtra = document.getElementById('lblEvExtra');
+
+  if (tipo === 'cambio') {
+    lblSel.innerText = "Chi ENTRA (Panchina)";
+    lblTesto.innerText = "Giocatore che ENTRA";
+    lblExtra.innerText = "Giocatore che ESCE";
+    subWrap.style.display = "block";
+
+    sel.innerHTML = `<option value="">-- Panchina (${pan.length}) --</option>` +
+      pan.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+
+    const subbedIn = pan.filter(p => (p.badge || '').includes('🔄'));
+    const onPitch = [...tit, ...subbedIn];
+    subOutSel.innerHTML = `<option value="">-- Titolari in campo (${onPitch.length}) --</option>` +
+      onPitch.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+  } else {
+    lblSel.innerText = "Seleziona Giocatore";
+    lblTesto.innerText = "Nome (o scrivi a mano)";
+    lblExtra.innerText = "Assist / Nota (o scegli)";
+    subWrap.style.display = "none";
+
+    sel.innerHTML = `<option value="">-- Scegli o scrivi sotto --</option>` +
+      all.map(p => `<option value="${p.nome}">${p.num} - ${p.nome}</option>`).join('');
+  }
+
+  const dl = document.getElementById('extraPlayersList');
+  dl.innerHTML = all.map(p => `<option value="(${p.nome})">`).join('') +
+    all.map(p => `<option value="(esce ${p.nome})">`).join('');
+}
+
+function onSelectPlayer(){
+  const val = document.getElementById('evPlayerSelect').value;
+  if(val) document.getElementById('evTesto').value = val;
+}
+
+function onSelectSubOut(){
+  const val = document.getElementById('evSubOutSelect').value;
+  if(val) document.getElementById('evExtra').value = `(esce ${val})`;
+}
+
+function addBadgeToPlayer(team, playerName, badgeIcon){
+  if(!playerName) return;
+  const cleanName = playerName.replace(/^\(esce\s+/i, '').replace(/^\(/, '').replace(/\)$/, '').trim();
+  if(!cleanName) return;
+  const keys = team === 'casa' ? ['casaTitolari','casaPanchina'] : ['ospiteTitolari','ospitePanchina'];
+  keys.forEach(k => {
+    (matchData.formazioni[k] || []).forEach(p => {
+      if(p.nome.toLowerCase().includes(cleanName.toLowerCase()) || cleanName.toLowerCase().includes(p.nome.toLowerCase())){
+        if(!p.badge.includes(badgeIcon)) p.badge = (p.badge + badgeIcon).trim();
+      }
+    });
+  });
+  document.getElementById('fCasaTit').value = playersToText(matchData.formazioni.casaTitolari);
+  document.getElementById('fOspTit').value = playersToText(matchData.formazioni.ospiteTitolari);
+  document.getElementById('fCasaPan').value = playersToText(matchData.formazioni.casaPanchina);
+  document.getElementById('fOspPan').value = playersToText(matchData.formazioni.ospitePanchina);
+}
+
+async function init(){
+  const savedToken = localStorage.getItem('mf_gh_token');
+  if(savedToken){
+    document.getElementById('ghToken').value = savedToken;
+    document.getElementById('tokenCard').style.border="2px solid #16a34a";
+  }
+  const res = await fetch(RAW_URL + "?t=" + Date.now());
+  matchData = await res.json();
+  if(!matchData.infoGara) matchData.infoGara = { arbitro: "", ass1: "", ass2: "" };
+
+  sortCronacaAndEvents();
+  onQuickTipoChange();
+  renderForm();
+  clearDirty();
+  setInterval(updatePreviewBadge, 1000);
+}
+
+function renderForm(){
+  document.getElementById('competizione').value = matchData.competizione || '';
+  document.getElementById('dataOra').value = matchData.dataOra || '';
+  document.getElementById('stadio').value = matchData.stadio || '';
+  document.getElementById('citta').value = matchData.citta || '';
+  const stEl = document.getElementById('stato');
+  stEl.value = ['PRE-PARTITA','1° TEMPO','INTERVALLO','2° TEMPO','FINALE'].includes(matchData.stato) ? matchData.stato : '1° TEMPO';
+  document.getElementById('nomeCasa').value = matchData.casa.nome || '';
+  document.getElementById('nomeOspite').value = matchData.ospite.nome || '';
+  document.getElementById('lblCasa').innerText = "Gol " + matchData.casa.nome;
+  document.getElementById('lblOspite').innerText = "Gol " + matchData.ospite.nome;
+  document.getElementById('golCasa').innerText = matchData.casa.gol || 0;
+  document.getElementById('golOspite').innerText = matchData.ospite.gol || 0;
+  document.getElementById('allCasa').value = matchData.casa.allenatore || '';
+  document.getElementById('allOspite').value = matchData.ospite.allenatore || '';
+  document.getElementById('arbitro').value = matchData.infoGara.arbitro || '';
+  document.getElementById('ass1').value = matchData.infoGara.ass1 || '';
+  document.getElementById('ass2').value = matchData.infoGara.ass2 || '';
+  document.getElementById('logoCasa').value = matchData.casa.logo || '';
+  document.getElementById('logoOspite').value = matchData.ospite.logo || '';
+
+  const qaSq = document.getElementById('qaSquadra');
+  qaSq.options[0].text = matchData.casa.nome || 'Casa';
+  qaSq.options[1].text = matchData.ospite.nome || 'Ospite';
+
+  document.getElementById('fCasaTit').value = playersToText(matchData.formazioni.casaTitolari);
+  document.getElementById('fOspTit').value = playersToText(matchData.formazioni.ospiteTitolari);
+  document.getElementById('fCasaPan').value = playersToText(matchData.formazioni.casaPanchina);
+  document.getElementById('fOspPan').value = playersToText(matchData.formazioni.ospitePanchina);
+
+  refreshPlayerDropdowns();
+  refreshQuickPlayers();
+  renderLists();
+  updatePreviewBadge();
+}
+
+function renderLists(){
+  document.getElementById('listaCommento').innerHTML = matchData.commento.map((c,i)=>`
+    <div class="item-row ${editCommIndex===i?'editing':''}">
+      <span>${c.saliente ? '⭐ ' : ''}${c.isNota && !c.min ? `📝 <i>${c.testo}</i>` : `<b>${c.min}</b> ${c.icona ? c.icona + ' ' : ''}${c.score?`[${c.score}] `:''}${c.testo}`}</span>
+      <div class="row-actions">
+        <button class="btn edit" onclick="editComm(${i})">Modifica</button>
+        <button class="btn red" onclick="delComm(${i})">Elimina</button>
+      </div>
+    </div>
+  `).join('');
+
+  document.getElementById('listaEventi').innerHTML = matchData.riassunto.map((e,i)=>`
+    <div class="item-row ${editEvIndex===i?'editing':''}">
+      <span><b>${e.min}</b> (${e.squadra==='casa'?'Casa':'Osp'}) ${e.score ? `[${e.score}] ` : ''}${e.testo} ${e.extra||''}</span>
+      <div class="row-actions">
+        <button class="btn edit" onclick="editEv(${i})">Modifica</button>
+        <button class="btn red" onclick="delEv(${i})">Elimina</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function chgGol(team, delta){
+  matchData[team].gol = Math.max(0, (matchData[team].gol || 0) + delta);
+  document.getElementById(team==='casa'?'golCasa':'golOspite').innerText = matchData[team].gol;
+  markDirty();
+}
+
+/* --- MODIFICA E AGGIUNTA COMMENTI --- */
+function editComm(i){
+  const c = matchData.commento[i];
+  editCommIndex = i;
+  document.getElementById('commMin').value = c.min || '';
+  if (c.isNota && !c.min) {
+    document.getElementById('commIcona').value = 'NOTA';
+  } else if (!c.icona) {
+    document.getElementById('commIcona').value = 'SOLO_MIN';
+  } else {
+    document.getElementById('commIcona').value = c.icona;
+  }
+  document.getElementById('commScore').value = c.score || '';
+  document.getElementById('commSaliente').checked = !!c.saliente;
+  document.getElementById('commTesto').value = c.testo || '';
+
+  const btn = document.getElementById('btnAddComm');
+  btn.innerText = "💾 Salva Modifica Commento";
+  btn.className = "btn orange";
+  document.getElementById('btnCancelComm').style.display = "block";
+  renderLists();
+  document.getElementById('cardCommento').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEditComm(){
+  editCommIndex = -1;
+  document.getElementById('commTesto').value = '';
+  document.getElementById('commMin').value = '';
+  document.getElementById('commScore').value = '';
+  document.getElementById('commSaliente').checked = false;
+  document.getElementById('commIcona').value = 'SOLO_MIN';
+  const btn = document.getElementById('btnAddComm');
+  btn.innerText = "+ Aggiungi al Commento";
+  btn.className = "btn";
+  document.getElementById('btnCancelComm').style.display = "none";
+  renderLists();
+}
+
+function addCommento(){
+  const sel = document.getElementById('commIcona').value;
+  const testo = document.getElementById('commTesto').value.trim();
+  const saliente = document.getElementById('commSaliente').checked;
+  const score = document.getElementById('commScore').value.trim();
+  if(!testo) return alert("Scrivi prima il testo!");
+
+  const isGol = (sel === '🥅' || sel === '🔴');
+  const min = document.getElementById('commMin').value.trim() || getCurrentAutoMin() || "1'";
+
+  let obj;
+  if (sel === 'NOTA') {
+    obj = { isNota: true, min: "", icona: "", testo, saliente, isGol: false };
+  } else if (sel === 'SOLO_MIN') {
+    obj = { isNota: false, min, icona: "", testo, saliente, isGol: false };
+  } else {
+    obj = { isNota: false, min, icona: sel, testo, saliente: saliente || isGol, isGol, score };
+  }
+
+  if (editCommIndex > -1) {
+    matchData.commento[editCommIndex] = obj;
+    sortCronacaAndEvents();
+    cancelEditComm();
+    markDirty();
+    showToast("Commento modificato! Premi PUBBLICA");
+  } else {
+    matchData.commento.unshift(obj);
+    sortCronacaAndEvents();
+    document.getElementById('commTesto').value = '';
+    document.getElementById('commMin').value = '';
+    document.getElementById('commScore').value = '';
+    document.getElementById('commSaliente').checked = false;
+    renderLists();
+    markDirty();
+    showToast("Aggiunto in ordine cronologico! Premi PUBBLICA");
+  }
+}
+
+function delComm(i){
+  if(editCommIndex === i) cancelEditComm();
+  matchData.commento.splice(i,1);
+  renderLists();
+  markDirty();
+}
+
+/* --- MODIFICA E AGGIUNTA EVENTI + GENERAZIONE FRASI --- */
+function editEv(i){
+  const e = matchData.riassunto[i];
+  editEvIndex = i;
+  document.getElementById('evTempo').value = String(e.tempo || 1);
+  document.getElementById('evMin').value = e.min || '';
+  document.getElementById('evSquadra').value = e.squadra || 'casa';
+  document.getElementById('evTipo').value = e.tipo || 'gol';
+  refreshPlayerDropdowns();
+  document.getElementById('evTesto').value = e.testo || '';
+  document.getElementById('evExtra').value = e.extra || '';
+  document.getElementById('evScoreEdit').value = e.score || '';
+  document.getElementById('evScoreWrap').style.display = "block";
+
+  const btn = document.getElementById('btnAddEv');
+  btn.innerText = "💾 Salva Modifica Evento";
+  btn.className = "btn orange";
+  document.getElementById('btnCancelEv').style.display = "block";
+  renderLists();
+  document.getElementById('cardEventi').scrollIntoView({ behavior: 'smooth' });
+}
+
+function cancelEditEv(){
+  editEvIndex = -1;
+  document.getElementById('evTesto').value = '';
+  document.getElementById('evExtra').value = '';
+  document.getElementById('evMin').value = '';
+  document.getElementById('evPlayerSelect').value = '';
+  document.getElementById('evSubOutSelect').value = '';
+  document.getElementById('evScoreEdit').value = '';
+  document.getElementById('evScoreWrap').style.display = "none";
+  const btn = document.getElementById('btnAddEv');
+  btn.innerText = "+ Aggiungi Evento";
+  btn.className = "btn";
+  document.getElementById('btnCancelEv').style.display = "none";
+  renderLists();
+}
+
+function addEvento(){
+  const tempo = parseInt(document.getElementById('evTempo').value);
+  const min = document.getElementById('evMin').value.trim() || getCurrentAutoMin() || "1'";
+  const squadra = document.getElementById('evSquadra').value;
+  const tipo = document.getElementById('evTipo').value;
+  const testo = document.getElementById('evTesto').value.trim();
+  const extra = document.getElementById('evExtra').value.trim();
+  if(!testo) return alert("Seleziona o scrivi il giocatore!");
+
+  const badgeMap = { gol: '⚽', giallo: '🟨', rosso: '🟥', cambio: '🔄' };
+  if (badgeMap[tipo]) {
+    addBadgeToPlayer(squadra, testo, badgeMap[tipo]);
+    if (tipo === 'cambio' && extra) {
+      addBadgeToPlayer(squadra, extra, '🔄');
+    }
+  }
+
+  if (editEvIndex > -1) {
+    const score = document.getElementById('evScoreEdit').value.trim();
+    matchData.riassunto[editEvIndex] = { tempo, min, squadra, tipo, score, testo, extra };
+    sortCronacaAndEvents();
+    cancelEditEv();
+    refreshPlayerDropdowns();
+    markDirty();
+    showToast("Evento modificato! Premi PUBBLICA");
+  } else {
+    let score = "";
+    if (tipo === 'gol' || tipo === 'autogol') {
+      chgGol(squadra, 1);
+      score = `${matchData.casa.gol} - ${matchData.ospite.gol}`;
+    }
+    matchData.riassunto.push({ tempo, min, squadra, tipo, score, testo, extra });
+
+    const teamName = (squadra === 'casa' ? matchData.casa.nome : matchData.ospite.nome) || (squadra === 'casa' ? 'Casa' : 'Ospite');
+    const abbr = getTeamAbbr(teamName);
+    const pTag = abbr ? `${testo} (${abbr})` : testo;
+    const cleanOut = extra.replace(/^\(esce\s+/i, '').replace(/^\(/, '').replace(/\)$/, '').trim();
+    const outTag = cleanOut ? (abbr ? `${cleanOut} (${abbr})` : cleanOut) : '';
+
+    if (tipo === 'giallo') {
+      matchData.commento.unshift({ isNota: false, min, icona: '🟨', testo: `Ammonito ${pTag}.`, saliente: false, isGol: false, score: '' });
+    } else if (tipo === 'rosso') {
+      matchData.commento.unshift({ isNota: false, min, icona: '🟥', testo: `Espulso ${pTag}.`, saliente: true, isGol: false, score: '' });
+    } else if (tipo === 'cambio') {
+      const fraseCambio = outTag
+        ? `Sostituzione ${teamName}: esce ${outTag} ed entra ${pTag}.`
+        : `Sostituzione ${teamName}: entra ${pTag}.`;
+      matchData.commento.unshift({ isNota: false, min, icona: '🔄', testo: fraseCambio, saliente: false, isGol: false, score: '' });
+    } else if (tipo === 'gol') {
+      const fraseGol = extra
+        ? `GOOOL! Rete di ${pTag} ${extra}!`
+        : `GOOOL! Rete di ${pTag}!`;
+      matchData.commento.unshift({ isNota: false, min, icona: '🥅', testo: fraseGol, saliente: true, isGol: true, score });
+    } else if (tipo === 'autogol') {
+      matchData.commento.unshift({ isNota: false, min, icona: '🔴', testo: `Autogol di ${pTag}!`, saliente: true, isGol: true, score });
+    }
+
+    sortCronacaAndEvents();
+    document.getElementById('evTesto').value = '';
+    document.getElementById('evExtra').value = '';
+    document.getElementById('evMin').value = '';
+    document.getElementById('evPlayerSelect').value = '';
+    document.getElementById('evSubOutSelect').value = '';
+    refreshPlayerDropdowns();
+    renderLists();
+    markDirty();
+    showToast("Aggiunto a Riassunto e Cronaca! Premi PUBBLICA");
+  }
+}
+
+function delEv(i){
+  if(editEvIndex === i) cancelEditEv();
+  matchData.riassunto.splice(i,1);
+  renderLists();
+  markDirty();
+}
+
+function copySocialPost(){
+  if(!matchData) return;
+  const c = matchData.casa;
+  const o = matchData.ospite;
+  const st = matchData.stato === 'FINALE' ? 'FINALE' : (getCurrentAutoMin() || matchData.stato);
+  const golList = matchData.riassunto
+    .filter(e => e.tipo === 'gol' || e.tipo === 'autogol')
+    .map(e => `⚽ ${e.min} ${e.testo}${e.tipo==='autogol'?' (Aut.)':''}`)
+    .join('\n');
+
+  const txt = `🔵⚪ ${c.nome.toUpperCase()} ${c.gol} - ${o.gol} ${o.nome.toUpperCase()} (${st})\n` +
+              (golList ? `\n${golList}\n` : '') +
+              `\n📲 Segui la diretta testuale live:\nhttps://botaniqa2025.github.io/manfredonia-live-trasferta/`;
+
+  navigator.clipboard.writeText(txt).then(() => {
+    showToast("📋 Testo copiato! Incollalo sui social");
+  }).catch(() => {
+    prompt("Copia questo testo:", txt);
+  });
+}
+
+function resetMatch(){
+  if(!confirm("Vuoi cancellare tutti i gol, gli eventi e la cronaca della partita precedente?")) return;
+  cancelEditEv();
+  cancelEditComm();
+  matchData.riassunto = [];
+  matchData.commento = [];
+  matchData.casa.gol = 0;
+  matchData.ospite.gol = 0;
+  matchData.recupero = "";
+  matchData.stato = "PRE-PARTITA";
+  matchData.timerStart = null;
+  matchData.timerBase = 1;
+  renderForm();
+  markDirty();
+  showToast("Partita azzerata! Premi PUBBLICA");
+}
+
+async function saveToGitHub(){
+  const token = localStorage.getItem('mf_gh_token') || document.getElementById('ghToken').value.trim();
+  if(!token) return alert("Inserisci prima il tuo Token GitHub in alto!");
+
+  const newStato = document.getElementById('stato').value;
+  const overrideVal = parseInt(document.getElementById('minOverride').value);
+
+  if (!isNaN(overrideVal) && overrideVal > 0) {
+    matchData.timerStart = Date.now();
+    matchData.timerBase = overrideVal;
+    document.getElementById('minOverride').value = '';
+  } else if (phaseChanged) {
+    if (newStato === '1° TEMPO') {
+      matchData.timerStart = Date.now();
+      matchData.timerBase = 1;
+    } else if (newStato === '2° TEMPO') {
+      matchData.timerStart = Date.now();
+      matchData.timerBase = 46;
+    } else {
+      matchData.timerStart = null;
+    }
+    phaseChanged = false;
+  }
+
+  matchData.stato = newStato;
+  matchData.competizione = document.getElementById('competizione').value.trim();
+  matchData.dataOra = document.getElementById('dataOra').value.trim();
+  matchData.stadio = document.getElementById('stadio').value.trim();
+  matchData.citta = document.getElementById('citta').value.trim();
+  matchData.casa.nome = document.getElementById('nomeCasa').value.trim();
+  matchData.ospite.nome = document.getElementById('nomeOspite').value.trim();
+  matchData.casa.allenatore = document.getElementById('allCasa').value.trim();
+  matchData.ospite.allenatore = document.getElementById('allOspite').value.trim();
+  matchData.infoGara = {
+    arbitro: document.getElementById('arbitro').value.trim(),
+    ass1: document.getElementById('ass1').value.trim(),
+    ass2: document.getElementById('ass2').value.trim()
+  };
+  matchData.casa.logo = document.getElementById('logoCasa').value.trim();
+  matchData.ospite.logo = document.getElementById('logoOspite').value.trim();
+
+  matchData.formazioni.casaTitolari = textToPlayers(document.getElementById('fCasaTit').value);
+  matchData.formazioni.ospiteTitolari = textToPlayers(document.getElementById('fOspTit').value);
+  matchData.formazioni.casaPanchina = textToPlayers(document.getElementById('fCasaPan').value);
+  matchData.formazioni.ospitePanchina = textToPlayers(document.getElementById('fOspPan').value);
+
+  sortCronacaAndEvents();
+
+  const btn = document.getElementById('btnSaveAll');
+  btn.innerText = "⏳ SALVATAGGIO IN CORSO...";
+  btn.disabled = true;
+
+  try{
+    const res = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+      method: 'PATCH',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        files: { "match.json": { content: JSON.stringify(matchData, null, 2) } }
+      })
+    });
+    if(!res.ok) throw new Error("Errore Token o rete");
+    updatePreviewBadge();
+    clearDirty();
+    showToast("✅ ONLINE! Tutto aggiornato!");
+  }catch(e){
+    alert("Errore durante il salvataggio: controlla il Token GitHub.");
+    btn.innerText = "⚠️ RIPROVA A PUBBLICARE";
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
