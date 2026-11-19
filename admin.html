@@ -38,11 +38,7 @@
   .rec-btn.active{background:#005596;color:#fff;border-color:#005596}
   .chk-box{display:flex;align-items:center;gap:8px;background:#f8fafc;padding:9px 10px;border-radius:8px;border:1px solid #cbd5e1;margin-top:8px;cursor:pointer;font-size:12.5px;font-weight:700;color:#0f172a}
   .chk-box input{width:18px;height:18px;accent-color:#005596;cursor:pointer}
-
-  /* Card Azioni Rapide */
   .quick-card{border:2px solid #bae6fd;background:linear-gradient(180deg,#f0f9ff 0%,#ffffff 38%)}
-  
-  /* Barra salvataggio con avviso visivo modifiche non pubblicate */
   .save-bar{position:fixed;bottom:0;left:0;right:0;background:#fff;padding:12px;box-shadow:0 -4px 16px rgba(0,0,0,.14);z-index:99;display:flex;gap:8px;justify-content:center;transition:background 0.25s}
   .save-bar.dirty{background:#fffbeb;border-top:2px solid #f59e0b}
   .save-bar button{max-width:460px;margin:0;font-size:14.5px;padding:14px;background:#16a34a;transition:0.25s}
@@ -51,7 +47,6 @@
     0%,100%{transform:scale(1)}
     50%{transform:scale(1.018)}
   }
-
   .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;padding:10px 18px;border-radius:20px;font-size:13px;font-weight:700;display:none;z-index:999}
   .live-pill{background:#e60026;color:#fff;padding:2px 8px;border-radius:10px;font-size:11px;font-variant-numeric:tabular-nums}
 </style>
@@ -129,7 +124,7 @@
     </div>
   </div>
 
-  <!-- GENERATORE RAPIDO TIRI & ANGOLI (SOLO CRONACA) -->
+  <!-- GENERATORE RAPIDO TIRI & ANGOLI -->
   <div class="card quick-card">
     <h2>⚡ Azioni Rapide (Auto-Cronaca)</h2>
     <div class="grid3">
@@ -210,7 +205,6 @@
       </div>
     </div>
 
-    <!-- Menu secondario filtrato sui Titolari (compare solo per le Sostituzioni) -->
     <div id="subOutWrap" style="display:none;margin-top:8px;">
       <label>Chi ESCE (Titolari / In campo)</label>
       <select id="evSubOutSelect" onchange="onSelectSubOut()"></select>
@@ -325,13 +319,28 @@
 </div>
 
 <div class="save-bar" id="saveBar">
-  <button class="btn green" id="btnSaveAll" onclick="saveToGitHub()">💾 PUBBLICA AGGIORNAMENTO LIVE</button>
+  <button class="btn green" id="btnSaveAll" type="button" onclick="saveToGitHub()">💾 PUBBLICA AGGIORNAMENTO LIVE</button>
 </div>
 
 <script>
 const GIST_ID = "dd15d972262ecba5e4473c14aafd3e46";
 const RAW_URL = `https://gist.githubusercontent.com/botaniqa2025/${GIST_ID}/raw/match.json`;
-let matchData = null;
+let matchData = {
+  competizione: "SERIE D - GIRONE H",
+  dataOra: "Domenica 14:30",
+  stadio: "",
+  citta: "",
+  stato: "PRE-PARTITA",
+  recupero: "",
+  timerStart: null,
+  timerBase: 1,
+  casa: { nome: "Squadra Casa", logo: "", gol: 0, allenatore: "" },
+  ospite: { nome: "Manfredonia", logo: "", gol: 0, allenatore: "" },
+  infoGara: { arbitro: "", ass1: "", ass2: "" },
+  riassunto: [],
+  formazioni: { casaTitolari: [], ospiteTitolari: [], casaPanchina: [], ospitePanchina: [] },
+  commento: []
+};
 let phaseChanged = false;
 let editEvIndex = -1;
 let editCommIndex = -1;
@@ -414,7 +423,7 @@ window.addEventListener('beforeunload', function(e){
 function showToast(msg){
   const t=document.getElementById('toast');
   t.innerText=msg; t.style.display='block';
-  setTimeout(()=>t.style.display='none',2500);
+  setTimeout(()=>t.style.display='none',2800);
 }
 
 function saveToken(){
@@ -422,7 +431,7 @@ function saveToken(){
   if(!val) return alert("Incolla prima il token ghp_...");
   localStorage.setItem('mf_gh_token', val);
   document.getElementById('tokenCard').style.border="2px solid #16a34a";
-  showToast("Token salvato sul telefono!");
+  showToast("Token salvato sul dispositivo!");
 }
 
 function getCurrentAutoMin(){
@@ -516,7 +525,6 @@ function syncTextToPlayers(){
   refreshQuickPlayers();
 }
 
-/* --- LOGICA AZIONI RAPIDE (TIRI SENZA ICONA & ANGOLI CON BANDIERINA) --- */
 function refreshQuickPlayers(){
   if(!matchData) return;
   const team = document.getElementById('qaSquadra').value;
@@ -556,7 +564,6 @@ function onQuickTipoChange(){
 }
 
 function addQuickAction(){
-  if(!matchData) return;
   const squadra = document.getElementById('qaSquadra').value;
   const tipo = document.getElementById('qaTipo').value;
   const player = document.getElementById('qaPlayer').value.trim();
@@ -735,12 +742,33 @@ async function init(){
     document.getElementById('ghToken').value = savedToken;
     document.getElementById('tokenCard').style.border="2px solid #16a34a";
   }
-  const res = await fetch(RAW_URL + "?t=" + Date.now());
-  matchData = await res.json();
-  if(!matchData.infoGara) matchData.infoGara = { arbitro: "", ass1: "", ass2: "" };
+  onQuickTipoChange();
+  renderForm();
+
+  try {
+    const res = await fetch(RAW_URL + "?t=" + Date.now());
+    if (res.ok) {
+      const loaded = await res.json();
+      if (loaded && typeof loaded === 'object') {
+        matchData = {
+          ...matchData,
+          ...loaded,
+          casa: { ...matchData.casa, ...(loaded.casa || {}) },
+          ospite: { ...matchData.ospite, ...(loaded.ospite || {}) },
+          infoGara: { ...matchData.infoGara, ...(loaded.infoGara || {}) },
+          formazioni: { ...matchData.formazioni, ...(loaded.formazioni || {}) },
+          riassunto: Array.isArray(loaded.riassunto) ? loaded.riassunto : [],
+          commento: Array.isArray(loaded.commento) ? loaded.commento : []
+        };
+      }
+    } else {
+      showToast("⚠️ Gist non trovato o privato: controlla il Gist!");
+    }
+  } catch (err) {
+    console.error("Errore caricamento Gist:", err);
+  }
 
   sortCronacaAndEvents();
-  onQuickTipoChange();
   renderForm();
   clearDirty();
   setInterval(updatePreviewBadge, 1000);
@@ -810,7 +838,6 @@ function chgGol(team, delta){
   markDirty();
 }
 
-/* --- MODIFICA E AGGIUNTA COMMENTI --- */
 function editComm(i){
   const c = matchData.commento[i];
   editCommIndex = i;
@@ -893,7 +920,6 @@ function delComm(i){
   markDirty();
 }
 
-/* --- MODIFICA E AGGIUNTA EVENTI + GENERAZIONE FRASI --- */
 function editEv(i){
   const e = matchData.riassunto[i];
   editEvIndex = i;
@@ -1047,8 +1073,8 @@ function resetMatch(){
 }
 
 async function saveToGitHub(){
-  const token = localStorage.getItem('mf_gh_token') || document.getElementById('ghToken').value.trim();
-  if(!token) return alert("Inserisci prima il tuo Token GitHub in alto!");
+  const token = (localStorage.getItem('mf_gh_token') || document.getElementById('ghToken').value || '').trim();
+  if(!token) return alert("Inserisci prima il tuo Token GitHub in alto e premi Salva!");
 
   const newStato = document.getElementById('stato').value;
   const overrideVal = parseInt(document.getElementById('minOverride').value);
@@ -1110,12 +1136,15 @@ async function saveToGitHub(){
         files: { "match.json": { content: JSON.stringify(matchData, null, 2) } }
       })
     });
-    if(!res.ok) throw new Error("Errore Token o rete");
+    if(!res.ok){
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.message || `Errore HTTP ${res.status}`);
+    }
     updatePreviewBadge();
     clearDirty();
     showToast("✅ ONLINE! Tutto aggiornato!");
   }catch(e){
-    alert("Errore durante il salvataggio: controlla il Token GitHub.");
+    alert("Errore GitHub: " + e.message + "\n\nControlla che il Token abbia i permessi 'gist' e che l'ID del Gist sia giusto.");
     btn.innerText = "⚠️ RIPROVA A PUBBLICARE";
   }finally{
     btn.disabled = false;
