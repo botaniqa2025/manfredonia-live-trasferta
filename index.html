@@ -287,7 +287,7 @@
       return `
         <div class="player-row ${isOspite ? 'ospite' : ''}">
           <span class="p-num" style="background:${bg};color:${fg};">${p.num}</span>
-          <span class="p-fullname">${cleanName}${isCap ? `<span class="cap-badge">C</span>` : ''}</span>
+          <span class="p-fullname">${isCap && isOspite ? `<span class="cap-badge">C</span>` : ''}${cleanName}${isCap && !isOspite ? `<span class="cap-badge">C</span>` : ''}</span>
           ${p.badge ? `<span class="p-badge">${p.badge}</span>` : ''}
         </div>
       `;
