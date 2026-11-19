@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manfredonia Calcio 1932 - Live Match</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  body { background: #eef2f6; color: #1a1a1a; padding: 8px; }
+  .card { max-width: 600px; margin: 0 auto; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 8px 24px rgba(0, 51, 102, 0.12); border: 1px solid #dbeafe; }
+  
+  /* Header con texture diagonale sottile e colori sociali */
+  .header {
+    background:
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 6px, transparent 6px, transparent 14px),
+      linear-gradient(135deg, #002244 0%, #004c99 55%, #0077cc 100%);
+    color: #fff;
+    padding: 18px 14px 16px;
+    text-align: center;
+    position: relative;
+  }
+  .comp { font-size: 11px; letter-spacing: 1.2px; opacity: 0.92; font-weight: 800; margin-bottom: 3px; text-transform: uppercase; }
+  .date { font-size: 11px; opacity: 0.82; margin-bottom: 2px; }
+  .venue { font-size: 11px; opacity: 0.88; margin-bottom: 14px; font-weight: 500; }
+  
+  .scoreboard { display: flex; align-items: center; justify-content: space-between; }
+  .team { width: 33%; display: flex; flex-direction: column; align-items: center; gap: 7px; }
+  .team img {
+    width: 56px; height: 56px; object-fit: contain; background: #fff; border-radius: 50%; padding: 5px;
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.22), 0 4px 10px rgba(0,0,0,0.25);
+  }
+  .team-name { font-size: 14px; font-weight: 800; line-height: 1.2; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+  
+  .score-box { width: 34%; display: flex; flex-direction: column; align-items: center; }
+  .score {
+    font-size: 40px;
+    font-weight: 900;
+    letter-spacing: -1px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.05;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  
+  /* Badge LIVE con pallino pulsante */
+  .status {
+    display: inline-flex; align-items: center; gap: 6px;
+    margin-top: 6px; padding: 4px 11px; border-radius: 20px;
+    font-size: 11px; font-weight: 800; letter-spacing: 0.4px;
+    font-variant-numeric: tabular-nums;
+    background: #dc2626; color: #fff;
+    box-shadow: 0 2px 8px rgba(220, 38, 38, 0.45);
+    white-space: nowrap;
+  }
+  .status.final { background: rgba(255,255,255,0.18); box-shadow: none; }
+  .live-dot {
+    width: 7px; height: 7px; border-radius: 50%; background: #fff;
+    animation: pulseDot 1.3s infinite ease-in-out;
+    flex-shrink: 0;
+  }
+  @keyframes pulseDot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.75); }
+  }
+
+  /* Barra avanzamento tempo */
+  .time-progress-wrap {
+    width: 82%; max-width: 120px; height: 4px;
+    background: rgba(255,255,255,0.22); border-radius: 4px;
+    margin-top: 7px; overflow: hidden;
+  }
+  .time-progress-bar {
+    height: 100%; width: 0%;
+    background: #38bdf8; border-radius: 4px;
+    transition: width 0.6s ease;
+  }
+  .rec-tag { display: block; font-size: 10px; opacity: 0.9; margin-top: 4px; font-weight: 700; color: #bae6fd; }
+
+  .tabs { display: flex; border-bottom: 1px solid #e2e8f0; background: #fff; overflow-x: auto; }
+  .tab-btn { flex: 1; padding: 12px 6px; border: none; background: none; font-size: 12px; font-weight: 800; color: #64748b; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.2s; white-space: nowrap; }
+  .tab-btn.active { color: #005596; border-bottom-color: #005596; }
+
+  .tab-content { display: none; padding: 14px; }
+  .tab-content.active { display: block; }
+
+  .half-bar { background: #f1f5f9; padding: 6px 10px; font-size: 11px; font-weight: 800; color: #475569; border-radius: 6px; margin: 10px 0 6px; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* Righe Riassunto con evidenziazione celeste/blu sui Gol */
+  .event-row { display: flex; align-items: center; padding: 9px 6px; border-bottom: 1px solid #f1f5f9; font-size: 13px; gap: 8px; border-radius: 6px; }
+  .event-row.ospite { flex-direction: row-reverse; text-align: right; }
+  .event-row.is-goal { background: #f0f9ff; border-bottom-color: #e0f2fe; border-left: 3px solid #0284c7; }
+  .event-row.ospite.is-goal { border-left: none; border-right: 3px solid #0284c7; }
+  .ev-min { font-weight: 700; color: #64748b; min-width: 30px; font-size: 12px; }
+  .ev-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 4px 9px; border: 1px solid #e2e8f0; border-radius: 8px; background: #fff; font-weight: 800; font-size: 12.5px; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+  .ev-pill.autogol { border-color: #fecaca; background: #fef2f2; color: #b91c1c; }
+  .ev-text { font-weight: 700; color: #0f172a; }
+  .ev-extra { color: #64748b; font-weight: 400; font-size: 12px; }
+
+  .lineup-teams-head { display: flex; justify-content: space-between; font-size: 12.5px; font-weight: 800; color: #003366; padding: 0 4px 6px; border-bottom: 2px solid #005596; }
+  .lineup-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 6px; }
+  .lineup-col { display: flex; flex-direction: column; }
+  .player-row { display: flex; align-items: center; padding: 7px 4px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; gap: 7px; }
+  .player-row.ospite { flex-direction: row-reverse; text-align: right; }
+  .p-num { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; height: 22px; padding: 0 4px; border-radius: 5px; background: #e0f2fe; color: #0369a1; font-weight: 800; font-size: 11px; }
+  .player-row.ospite .p-num { background: #f1f5f9; color: #334155; }
+  .p-fullname { font-weight: 600; color: #1e293b; flex: 1; line-height: 1.25; }
+  .p-badge { font-size: 12px; }
+  .coaches-box { display: flex; justify-content: space-between; padding: 8px 6px; background: #f8fafc; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: #1e293b; margin-top: 6px; }
+  .ref-box { background: #f8fafc; border-radius: 8px; padding: 8px 10px; margin-top: 6px; font-size: 12px; color: #334155; display: flex; flex-direction: column; gap: 5px; }
+  .ref-row { display: flex; justify-content: space-between; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; }
+  .ref-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .ref-lbl { color: #64748b; font-weight: 600; }
+  .ref-val { font-weight: 700; color: #0f172a; }
+
+  .sub-tabs { display: flex; gap: 8px; background: #f1f5f9; padding: 5px; border-radius: 10px; margin-bottom: 12px; }
+  .sub-btn { flex: 1; padding: 7px 10px; border: none; border-radius: 7px; font-size: 11.5px; font-weight: 800; color: #64748b; background: transparent; cursor: pointer; transition: 0.2s; }
+  .sub-btn.active { background: #fff; color: #0f172a; box-shadow: 0 1px 3px rgba(0,0,0,0.08); }
+
+  /* Commenti + Gol in Grassetto Rosso */
+  .comm-item { padding: 12px 8px; border-bottom: 1px solid #e2e8f0; border-radius: 6px; }
+  .comm-item:last-child { border-bottom: none; }
+  .comm-item.is-goal { background: #fef2f2; border-bottom-color: #fecaca; border-left: 3px solid #dc2626; margin: 4px 0; }
+  .comm-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .comm-min { font-weight: 700; font-size: 12.5px; color: #334155; }
+  .comm-pill { display: inline-flex; align-items: center; justify-content: center; gap: 5px; padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; font-size: 12.5px; font-weight: 800; color: #0f172a; }
+  .comm-body { font-size: 13px; line-height: 1.48; color: #334155; font-weight: 400; }
+  .comm-body.saliente { font-weight: 700; color: #0f172a; }
+  .comm-body.gol-text { font-weight: 800; color: #dc2626; }
+  .comm-note { padding: 12px 4px; border-bottom: 1px solid #e2e8f0; font-size: 13px; line-height: 1.48; color: #334155; }
+  .comm-note:last-child { border-bottom: none; }
+  .comm-note.saliente { font-weight: 700; color: #0f172a; }
+
+  /* Footer con lo stesso identico stile dell'Header */
+  .club-footer {
+    background:
+      repeating-linear-gradient(-45deg, rgba(255,255,255,0.03) 0px, rgba(255,255,255,0.03) 6px, transparent 6px, transparent 14px),
+      linear-gradient(135deg, #002244 0%, #004c99 55%, #0077cc 100%);
+    color: #fff;
+    padding: 16px 12px 12px;
+    text-align: center;
+  }
+  .footer-brand { font-size: 13px; font-weight: 800; color: #fff; margin-bottom: 10px; letter-spacing: 0.4px; text-shadow: 0 1px 2px rgba(0,0,0,0.25); }
+  .footer-links { display: flex; justify-content: center; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+  .footer-links a {
+    color: #fff; text-decoration: none; font-size: 11.5px; font-weight: 700;
+    background: rgba(255,255,255,0.14); padding: 6px 12px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.22);
+    transition: 0.2s;
+  }
+  .footer-links a:hover { background: rgba(255,255,255,0.26); }
+  .footer-credits {
+    border-top: 1px solid rgba(255,255,255,0.16);
+    padding-top: 10px;
+    margin-bottom: 6px;
+    font-size: 11.5px;
+    color: #e0f2fe;
+    font-weight: 500;
+  }
+  .footer-credits strong { color: #fff; font-weight: 800; }
+  .credit-links { display: inline-flex; gap: 6px; margin-left: 6px; }
+  .credit-links a {
+    color: #fff; text-decoration: none; font-weight: 700;
+    background: rgba(255,255,255,0.16); padding: 2px 9px; border-radius: 10px; font-size: 11px;
+    border: 1px solid rgba(255,255,255,0.2);
+  }
+  .credit-links a:hover { background: rgba(255,255,255,0.28); }
+  .sync-note { font-size: 10px; color: #bae6fd; opacity: 0.85; margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <div class="comp" id="comp">SERIE D</div>
+    <div class="date" id="dateOra">Caricamento...</div>
+    <div class="venue" id="stadioCitta"></div>
+    <div class="scoreboard">
+      <div class="team">
+        <img id="logoCasa" src="" alt="Casa">
+        <div class="team-name" id="nomeCasa">Squadra Casa</div>
+      </div>
+      <div class="score-box">
+        <div class="score" id="risultato">0 - 0</div>
+        <div class="status" id="statoBadge"><span class="live-dot"></span><span>LIVE</span></div>
+        <div class="time-progress-wrap" id="progWrap"><div class="time-progress-bar" id="progBar"></div></div>
+        <span class="rec-tag" id="recTag"></span>
+      </div>
+      <div class="team">
+        <img id="logoOspite" src="" alt="Ospite">
+        <div class="team-name" id="nomeOspite">Manfredonia</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="openTab('riassunto', this)">RIASSUNTO</button>
+    <button class="tab-btn" onclick="openTab('formazioni', this)">FORMAZIONI</button>
+    <button class="tab-btn" onclick="openTab('commento', this)">COMMENTO</button>
+  </div>
+
+  <div id="riassunto" class="tab-content active"></div>
+  <div id="formazioni" class="tab-content"></div>
+  <div id="commento" class="tab-content">
+    <div class="sub-tabs">
+      <button class="sub-btn active" id="btnSubAll" onclick="setCommFilter('all')">COMMENTI</button>
+      <button class="sub-btn" id="btnSubSal" onclick="setCommFilter('salienti')">FASI SALIENTI</button>
+    </div>
+    <div id="commentoList"></div>
+  </div>
+
+  <div class="club-footer">
+    <div class="footer-brand">🐬 Manfredonia Calcio 1932</div>
+    <div class="footer-links">
+      <a href="https://www.facebook.com/share/1JLmBXSPWJ/" target="_blank" rel="noopener">Facebook</a>
+      <a href="https://www.instagram.com/manfredonia_calcio1932?rpxt=OTdub2FlODhja3B4" target="_blank" rel="noopener">Instagram</a>
+      <a href="https://whatsapp.com/channel/0029VajBpyKGk1FqU90IeV1I" target="_blank" rel="noopener">WhatsApp</a>
+      <a href="https://www.manfredoniacalcio1932.net" target="_blank" rel="noopener">Sito Ufficiale</a>
+    </div>
+    <div class="footer-credits">
+      Created by <strong>Nico Troiano</strong>
+      <span class="credit-links">
+        <a href="https://www.instagram.com/nico.troiano?psln=dHFqdG83aGZ3N2Rv" target="_blank" rel="noopener">Instagram</a>
+        <a href="https://www.facebook.com/share/1CGAhCoRx6/" target="_blank" rel="noopener">Facebook</a>
+      </span>
+    </div>
+    <div class="sync-note" id="syncStatus">Aggiornamento automatico attivo</div>
+  </div>
+</div>
+
+<script>
+  const GIST_URL = "https://gist.githubusercontent.com/botaniqa2025/dd15d972262ecba5e4473c14aafd3e46/raw/match.json";
+  let currentData = null;
+  let commFilter = 'all';
+
+  function openTab(tabId, btn) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    btn.classList.add('active');
+  }
+
+  function setCommFilter(mode) {
+    commFilter = mode;
+    document.getElementById('btnSubAll').classList.toggle('active', mode === 'all');
+    document.getElementById('btnSubSal').classList.toggle('active', mode === 'salienti');
+    renderCommento();
+  }
+
+  function parseMinuteSortValue(minStr) {
+    if (!minStr) return -1;
+    const clean = String(minStr).replace(/'/g, '').trim();
+    if (clean.includes('+')) {
+      const parts = clean.split('+');
+      return (parseInt(parts[0], 10) || 0) + ((parseInt(parts[1], 10) || 0) * 0.01);
+    }
+    const val = parseInt(clean, 10);
+    return isNaN(val) ? -1 : val;
+  }
+
+  function renderPill(e) {
+    if (e.tipo === 'gol') {
+      return `<span class="ev-pill">⚽${e.score ? ` <span>${e.score}</span>` : ''}</span>`;
+    }
+    if (e.tipo === 'autogol') {
+      return `<span class="ev-pill autogol">⚽${e.score ? ` <span>${e.score}</span>` : ''} <small>(Aut.)</small></span>`;
+    }
+    if (e.tipo === 'giallo') return `<span class="ev-pill">🟨</span>`;
+    if (e.tipo === 'rosso') return `<span class="ev-pill">🟥</span>`;
+    if (e.tipo === 'cambio') return `<span class="ev-pill">🔄</span>`;
+    return `<span class="ev-pill">•</span>`;
+  }
+
+  function renderPlayerList(list, isOspite) {
+    return (list || []).map(p => `
+      <div class="player-row ${isOspite ? 'ospite' : ''}">
+        <span class="p-num">${p.num}</span>
+        <span class="p-fullname">${p.nome}</span>
+        ${p.badge ? `<span class="p-badge">${p.badge}</span>` : ''}
+      </div>
+    `).join('');
+  }
+
+  function renderCommento() {
+    if (!currentData) return;
+    const rawList = (currentData.commento || []).filter(c => commFilter === 'all' || c.saliente);
+    const list = [...rawList].sort((a, b) => {
+      const va = (a.isNota && !a.min) ? -1 : parseMinuteSortValue(a.min);
+      const vb = (b.isNota && !b.min) ? -1 : parseMinuteSortValue(b.min);
+      if (va === vb) return 0;
+      return vb - va;
+    });
+
+    if (!list.length) {
+      document.getElementById('commentoList').innerHTML = `<div style="font-size:12.5px;color:#94a3b8;padding:10px 2px;">Nessuna azione disponibile</div>`;
+      return;
+    }
+
+    document.getElementById('commentoList').innerHTML = list.map(c => {
+      const isGol = !!c.isGol || c.icona === '🥅' || c.icona === '🔴';
+      const isSaliente = c.saliente || isGol;
+      const bodyClass = isGol ? 'comm-body gol-text' : (isSaliente ? 'comm-body saliente' : 'comm-body');
+
+      if (c.isNota && !c.min) {
+        return `<div class="comm-note ${isSaliente ? 'saliente' : ''}">${c.testo}</div>`;
+      }
+
+      if (!c.icona) {
+        return `
+          <div class="comm-item">
+            <div class="comm-head">
+              <span class="comm-min">${c.min}</span>
+            </div>
+            <div class="${bodyClass}">${c.testo}</div>
+          </div>
+        `;
+      }
+
+      const displayIcon = c.icona === '🥅' ? '⚽' : c.icona;
+      const pillContent = `${displayIcon}${c.score ? ` <span>${c.score}</span>` : ''}`;
+
+      return `
+        <div class="comm-item ${isGol ? 'is-goal' : ''}">
+          <div class="comm-head">
+            <span class="comm-min">${c.min}</span>
+            <span class="comm-pill">${pillContent}</span>
+          </div>
+          <div class="${bodyClass}">${c.testo}</div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function pad2(n) {
+    return String(n).padStart(2, '0');
+  }
+
+  function updateClock() {
+    if (!currentData) return;
+    const badge = document.getElementById('statoBadge');
+    const recTag = document.getElementById('recTag');
+    const progWrap = document.getElementById('progWrap');
+    const progBar = document.getElementById('progBar');
+    const st = currentData.stato;
+
+    if (st === 'FINALE' || st === 'INTERVALLO' || st === 'PRE-PARTITA') {
+      badge.innerHTML = `<span>${st}</span>`;
+      badge.className = 'status final';
+      recTag.innerText = '';
+      progWrap.style.display = 'block';
+      progBar.style.width = st === 'FINALE' ? '100%' : (st === 'INTERVALLO' ? '50%' : '0%');
+      return;
+    }
+
+    badge.className = 'status';
+    progWrap.style.display = 'block';
+    recTag.innerText = currentData.recupero ? `Recupero: +${currentData.recupero}'` : '';
+
+    if (currentData.timerStart) {
+      const base = currentData.timerBase || 1;
+      const baseSeconds = Math.max(0, (base - 1) * 60);
+      const elapsedSeconds = Math.max(0, Math.floor((Date.now() - currentData.timerStart) / 1000));
+      const totalSeconds = baseSeconds + elapsedSeconds;
+      const mins = Math.floor(totalSeconds / 60);
+      const secs = totalSeconds % 60;
+
+      let labelText = '';
+      if (st === '1° TEMPO' || (st === 'LIVE' && base <= 45)) {
+        if (mins < 45) {
+          labelText = `LIVE ${pad2(mins)}:${pad2(secs)}`;
+        } else {
+          const extraSec = totalSeconds - (45 * 60);
+          labelText = `LIVE 45:00 +${pad2(Math.floor(extraSec / 60))}:${pad2(extraSec % 60)}`;
+        }
+        progBar.style.width = `${Math.min(50, Math.round((Math.min(mins, 45) / 90) * 100))}%`;
+      } else {
+        if (mins < 90) {
+          labelText = `LIVE ${pad2(mins)}:${pad2(secs)}`;
+        } else {
+          const extraSec = totalSeconds - (90 * 60);
+          labelText = `LIVE 90:00 +${pad2(Math.floor(extraSec / 60))}:${pad2(extraSec % 60)}`;
+        }
+        progBar.style.width = `${Math.min(100, Math.round((Math.min(mins, 90) / 90) * 100))}%`;
+      }
+      badge.innerHTML = `<span class="live-dot"></span><span>${labelText}</span>`;
+    } else {
+      const txt = currentData.minuto ? `LIVE ${currentData.minuto}` : st;
+      badge.innerHTML = `<span class="live-dot"></span><span>${txt}</span>`;
+    }
+  }
+
+  async function loadMatchData() {
+    try {
+      const res = await fetch(GIST_URL + "?t=" + Date.now());
+      const data = await res.json();
+      currentData = data;
+
+      document.getElementById('comp').innerText = data.competizione || '';
+      document.getElementById('dateOra').innerText = data.dataOra || '';
+      const venueParts = [data.stadio, data.citta].filter(Boolean);
+      document.getElementById('stadioCitta').innerText = venueParts.length ? `📍 ${venueParts.join(' - ')}` : '';
+      
+      document.getElementById('nomeCasa').innerText = data.casa.nome;
+      document.getElementById('logoCasa').src = data.casa.logo;
+      document.getElementById('nomeOspite').innerText = data.ospite.nome;
+      document.getElementById('logoOspite').src = data.ospite.logo;
+      document.getElementById('risultato').innerText = `${data.casa.gol} - ${data.ospite.gol}`;
+      
+      updateClock();
+
+      const t1 = data.riassunto.filter(e => e.tempo === 1).sort((a, b) => parseMinuteSortValue(a.min) - parseMinuteSortValue(b.min));
+      const t2 = data.riassunto.filter(e => e.tempo === 2).sort((a, b) => parseMinuteSortValue(a.min) - parseMinuteSortValue(b.min));
+      const renderEvents = list => list.map(e => {
+        const isGoal = e.tipo === 'gol' || e.tipo === 'autogol';
+        return `
+          <div class="event-row ${e.squadra} ${isGoal ? 'is-goal' : ''}">
+            <span class="ev-min">${e.min}</span>
+            ${renderPill(e)}
+            <span class="ev-text">${e.testo}</span>
+            ${e.extra ? `<span class="ev-extra">${e.extra}</span>` : ''}
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('riassunto').innerHTML = `
+        <div class="half-bar">1° Tempo</div>
+        ${t1.length ? renderEvents(t1) : '<div style="font-size:12px;color:#94a3b8;padding:6px;">Nessun evento</div>'}
+        ${t2.length ? `<div class="half-bar">2° Tempo</div>` + renderEvents(t2) : ''}
+      `;
+
+      const info = data.infoGara || {};
+      const hasInfo = info.arbitro || info.ass1 || info.ass2;
+
+      document.getElementById('formazioni').innerHTML = `
+        <div class="lineup-teams-head">
+          <span>${data.casa.nome}</span>
+          <span>${data.ospite.nome}</span>
+        </div>
+        <div class="half-bar">Titolari</div>
+        <div class="lineup-grid">
+          <div class="lineup-col">${renderPlayerList(data.formazioni.casaTitolari, false)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.ospiteTitolari, true)}</div>
+        </div>
+        <div class="half-bar" style="margin-top:16px;">In Panchina</div>
+        <div class="lineup-grid">
+          <div class="lineup-col">${renderPlayerList(data.formazioni.casaPanchina, false)}</div>
+          <div class="lineup-col">${renderPlayerList(data.formazioni.ospitePanchina, true)}</div>
+        </div>
+        ${(data.casa.allenatore || data.ospite.allenatore) ? `
+          <div class="half-bar" style="margin-top:16px;">Allenatori</div>
+          <div class="coaches-box">
+            <span>${data.casa.allenatore || '-'}</span>
+            <span>${data.ospite.allenatore || '-'}</span>
+          </div>
+        ` : ''}
+        ${hasInfo ? `
+          <div class="half-bar" style="margin-top:16px;">Info Gara & Arbitri</div>
+          <div class="ref-box">
+            ${info.arbitro ? `<div class="ref-row"><span class="ref-lbl">Arbitro</span><span class="ref-val">${info.arbitro}</span></div>` : ''}
+            ${info.ass1 ? `<div class="ref-row"><span class="ref-lbl">Assistente 1</span><span class="ref-val">${info.ass1}</span></div>` : ''}
+            ${info.ass2 ? `<div class="ref-row"><span class="ref-lbl">Assistente 2</span><span class="ref-val">${info.ass2}</span></div>` : ''}
+          </div>
+        ` : ''}
+      `;
+
+      renderCommento();
+
+      const now = new Date();
+      document.getElementById('syncStatus').innerText = `Ultimo sync: ${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}:${now.getSeconds().toString().padStart(2,'0')}`;
+    } catch (err) {
+      document.getElementById('syncStatus').innerText = "Errore lettura dati";
+    }
+  }
+
+  loadMatchData();
+  setInterval(loadMatchData, 10000);
+  setInterval(updateClock, 1000);
+</script>
+</body>
+</html>
